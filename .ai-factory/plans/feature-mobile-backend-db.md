@@ -67,26 +67,26 @@ Created: 2026-03-24
   - Dependency notes: depends on Tasks 3, 4, and 5.
 
 ### Phase 3: Statistics, integration readiness, and API surface
-- [ ] **Task 7: Implement portfolio statistics aggregation for the statistics screen**
+- [x] **Task 7: Implement portfolio statistics aggregation for the statistics screen**
   - Deliverable: add the `GET /portfolio/statistics` read model and aggregation logic for transaction-based portfolio metrics required from the backend, while keeping quote-derived calculations on the client side.
   - Files: `mobile-backend/src/main/kotlin/com/example/stocktracker/application/statistics/*`, `mobile-backend/src/main/kotlin/com/example/stocktracker/domain/statistics/*`, `mobile-backend/src/main/kotlin/com/example/stocktracker/infrastructure/db/repositories/*`, `mobile-backend/src/main/kotlin/com/example/stocktracker/presentation/http/statistics/*`, `mobile-backend/src/main/kotlin/com/example/stocktracker/presentation/http/dto/statistics/*`.
   - Logging requirements: log statistics query scope, aggregation stages, empty-data scenarios, and expensive-query boundaries; use `DEBUG` for intermediate aggregation checkpoints, `INFO` for successful statistics generation, and `WARN` for recoverable data gaps.
   - Dependency notes: depends on Tasks 5 and 6.
 
-- [ ] **Task 8: Add cross-cutting API concerns for integration readiness**
+- [x] **Task 8: Add cross-cutting API concerns for integration readiness**
   - Deliverable: standardize API error shapes, validation, authentication guards for protected endpoints, request correlation, and placeholders/interfaces for future quote-service and observability integration.
   - Files: `mobile-backend/src/main/kotlin/com/example/stocktracker/presentation/http/errors/*`, `mobile-backend/src/main/kotlin/com/example/stocktracker/presentation/plugins/StatusPages.kt`, `mobile-backend/src/main/kotlin/com/example/stocktracker/presentation/plugins/Authentication.kt`, `mobile-backend/src/main/kotlin/com/example/stocktracker/presentation/plugins/Routing.kt`, `mobile-backend/src/main/kotlin/com/example/stocktracker/infrastructure/logging/*`, `mobile-backend/src/main/kotlin/com/example/stocktracker/infrastructure/config/*`, `mobile-backend/src/main/kotlin/com/example/stocktracker/application/ports/*`.
   - Logging requirements: log error translation, request IDs/correlation IDs, auth-guard decisions, external integration boundary calls, and observability bootstrap hooks; use `DEBUG` for request diagnostics, `INFO` for key lifecycle events, `WARN` for expected business denials, and `ERROR` for unhandled failures.
   - Dependency notes: depends on Tasks 4, 5, 6, and 7.
 
 ### Phase 4: Tests and documentation
-- [ ] **Task 9: Add domain, application, persistence, and HTTP test coverage**
+- [x] **Task 9: Add domain, application, persistence, and HTTP test coverage**
   - Deliverable: implement automated tests for auth, holdings lookup, buy/sell flows, statistics aggregation, and repository behavior using unit tests plus Ktor `testApplication` and database-backed integration coverage.
   - Files: `mobile-backend/src/test/kotlin/com/example/stocktracker/domain/*`, `mobile-backend/src/test/kotlin/com/example/stocktracker/application/*`, `mobile-backend/src/test/kotlin/com/example/stocktracker/infrastructure/*`, `mobile-backend/src/test/kotlin/com/example/stocktracker/presentation/*`, `mobile-backend/src/test/resources/*`.
   - Logging requirements: log test fixture setup/teardown for integration suites, failing scenario context, seed-data creation, and HTTP test request/response checkpoints at `DEBUG`; keep logs suppressible in green runs via test config.
   - Dependency notes: depends on Tasks 4 through 8.
 
-- [ ] **Task 10: Write required Markdown documentation and endpoint reference**
+- [x] **Task 10: Write required Markdown documentation and endpoint reference**
   - Deliverable: document backend setup, architectural decisions for this branch, and a dedicated endpoint reference file describing request/response contracts for auth, holdings, buy/sell, and statistics.
   - Files: `README.md`, `docs/backend-implementation.md`, `docs/endpoints.md`.
   - Logging requirements: document the logging model and key log events in the Markdown output; ensure docs mention `LOG_LEVEL`, request tracing, and where integration diagnostics appear.

@@ -47,6 +47,7 @@ data class AppConfig(
     val environment: String,
     val logging: AppLogLevel,
     val jwt: JwtConfig,
+    val observability: ObservabilityConfig,
     val database: DatabaseConfig,
     val clock: Clock = Clock.systemUTC(),
 ) {
@@ -63,6 +64,10 @@ data class AppConfig(
                 audience = config.propertyOrNull("app.jwt.audience")?.getString().orEmpty().ifBlank { "stock-tracker-mobile" },
                 realm = config.propertyOrNull("app.jwt.realm")?.getString().orEmpty().ifBlank { "stock-tracker" },
                 accessTokenTtlMinutes = config.propertyOrNull("app.jwt.accessTokenTtlMinutes")?.getString()?.toLongOrNull() ?: 120L,
+            ),
+            observability = ObservabilityConfig(
+                tracingEnabled = config.propertyOrNull("app.observability.tracingEnabled")?.getString()?.toBooleanStrictOrNull() ?: true,
+                serviceName = config.propertyOrNull("app.observability.serviceName")?.getString().orEmpty().ifBlank { "mobile-backend" },
             ),
             database = DatabaseConfig(
                 jdbcUrl = config.propertyOrNull("app.database.jdbcUrl")?.getString(),

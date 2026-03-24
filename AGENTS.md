@@ -27,6 +27,7 @@ This repository is intended to hold the full trading and investing application p
 ├── mobile-backend/              # Kotlin Ktor backend module for the mobile app
 │   ├── build.gradle.kts        # Module dependencies and build logic
 │   └── src/                    # Kotlin sources, resources, and tests for backend work
+├── docs/                        # Backend implementation and endpoint reference docs
 ├── gradle/                      # Gradle wrapper files shared by repo modules
 ├── build.gradle.kts             # Root multi-module Gradle configuration
 ├── settings.gradle.kts          # Root module includes and naming
@@ -39,13 +40,14 @@ This repository is intended to hold the full trading and investing application p
 ## Key Entry Points
 | File | Purpose |
 |------|---------|
-| `README.md` | Repository landing page |
+| `README.md` | Repository landing page and branch-scope run/test commands |
 | `opencode.json` | Existing OpenCode config currently used by the workspace |
 | `.mcp.json` | Project MCP server definitions for GitHub, filesystem, and Postgres |
 | `.ai-factory/DESCRIPTION.md` | Product scope, tech stack, and non-functional requirements |
 | `.ai-factory/ARCHITECTURE.md` | Clean Architecture rules for the Kotlin backend |
 | `settings.gradle.kts` | Root Gradle module declarations |
 | `mobile-backend/build.gradle.kts` | Kotlin Ktor backend module build definition |
+| `docs/endpoints.md` | API contract reference for implemented backend endpoints |
 | `.opencode/skills/trading-backend-kotlin-api/SKILL.md` | Custom project skill for Kotlin trading backend work |
 
 ## Documentation
@@ -54,6 +56,8 @@ This repository is intended to hold the full trading and investing application p
 | README | `README.md` | Project landing page |
 | Architecture | `.ai-factory/ARCHITECTURE.md` | Architecture pattern and dependency rules |
 | Project Description | `.ai-factory/DESCRIPTION.md` | Project specification and stack |
+| Backend Implementation | `docs/backend-implementation.md` | Backend setup, configuration, and integration notes |
+| Endpoint Reference | `docs/endpoints.md` | Request and response contracts for current endpoints |
 | Project Map | `AGENTS.md` | Structural guide for AI agents |
 
 ## AI Context Files

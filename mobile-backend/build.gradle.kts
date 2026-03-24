@@ -44,6 +44,7 @@ dependencies {
     testImplementation(kotlin("test"))
     testImplementation("io.ktor:ktor-server-test-host-jvm:3.1.3")
     testImplementation("io.ktor:ktor-client-content-negotiation-jvm:3.1.3")
+    testImplementation("com.h2database:h2:2.3.232")
     testImplementation("io.ktor:ktor-serialization-kotlinx-json-jvm:3.1.3")
     testImplementation("io.ktor:ktor-server-content-negotiation-jvm:3.1.3")
     testImplementation("io.ktor:ktor-server-status-pages-jvm:3.1.3")

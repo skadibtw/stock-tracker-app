@@ -4,6 +4,7 @@ import com.example.stocktracker.application.auth.LoginUserUseCase
 import com.example.stocktracker.application.auth.RegisterUserUseCase
 import com.example.stocktracker.application.common.HealthCheckUseCase
 import com.example.stocktracker.application.portfolio.GetStockHoldingDetailsUseCase
+import com.example.stocktracker.application.statistics.GetPortfolioStatisticsUseCase
 import com.example.stocktracker.application.trading.BuyStockUseCase
 import com.example.stocktracker.application.trading.SellStockUseCase
 import com.example.stocktracker.infrastructure.config.AppConfig
@@ -11,6 +12,7 @@ import com.example.stocktracker.infrastructure.db.repositories.ExposedPortfolioR
 import com.example.stocktracker.infrastructure.db.repositories.ExposedTradeHistoryRepository
 import com.example.stocktracker.infrastructure.db.repositories.ExposedUserRepository
 import com.example.stocktracker.infrastructure.db.transactions.DatabaseFactory
+import com.example.stocktracker.infrastructure.logging.LoggingTelemetryRecorder
 import com.example.stocktracker.infrastructure.security.BcryptPasswordHasher
 import com.example.stocktracker.infrastructure.security.JwtTokenIssuer
 import com.example.stocktracker.presentation.plugins.configureAuthentication
@@ -47,6 +49,7 @@ fun Application.module() {
     val tradeHistoryRepository = ExposedTradeHistoryRepository()
     val passwordHasher = BcryptPasswordHasher()
     val tokenIssuer = JwtTokenIssuer(appConfig.jwt, appConfig.clock)
+    val telemetryRecorder = LoggingTelemetryRecorder()
     val registerUserUseCase = RegisterUserUseCase(
         userRepository = userRepository,
         portfolioRepository = portfolioRepository,
@@ -71,6 +74,10 @@ fun Application.module() {
         tradeHistoryRepository = tradeHistoryRepository,
         clock = appConfig.clock,
     )
+    val getPortfolioStatisticsUseCase = GetPortfolioStatisticsUseCase(
+        portfolioRepository = portfolioRepository,
+        tradeHistoryRepository = tradeHistoryRepository,
+    )
 
     configureCallId()
     configureCallLogging(appConfig)
@@ -82,8 +89,18 @@ fun Application.module() {
         registerUserUseCase = registerUserUseCase,
         loginUserUseCase = loginUserUseCase,
         getStockHoldingDetailsUseCase = getStockHoldingDetailsUseCase,
+        getPortfolioStatisticsUseCase = getPortfolioStatisticsUseCase,
         buyStockUseCase = buyStockUseCase,
         sellStockUseCase = sellStockUseCase,
+    )
+
+    telemetryRecorder.record(
+        event = "application.bootstrap.completed",
+        attributes = mapOf(
+            "service" to appConfig.observability.serviceName,
+            "environment" to appConfig.environment,
+            "tracingEnabled" to appConfig.observability.tracingEnabled.toString(),
+        ),
     )
 
     logger.info { "[Application.module] Mobile backend bootstrap completed" }
