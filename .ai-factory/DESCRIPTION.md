@@ -29,6 +29,7 @@ This repository is intended to contain the full trading and investing applicatio
 - **Database:** PostgreSQL
 - **ORM:** Exposed
 - **Testing:** Kotlin test stack for unit and integration coverage
+- **Authentication:** BCrypt password hashing and JWT access tokens
 - **Cache / Messaging:** Redis Server or KeyDB
 - **Analytics / OLAP:** ClickHouse
 - **Observability:** OpenTelemetry
@@ -86,6 +87,7 @@ Pattern: Clean Architecture
 - Logging: Configurable via `LOG_LEVEL`
 - Error handling: Structured JSON error responses with stable error codes
 - Security: Store only password hashes, validate authentication inputs, and protect write endpoints
+- Security: Use JWT access tokens for authenticated API access
 - Reliability: Prevent duplicate buy/sell execution on retries where feasible
 - Testing: Cover auth, buy/sell flows, holdings queries, statistics aggregation, and repository behavior
 - Documentation: Maintain implementation notes in Markdown and a separate file for endpoint definitions

@@ -34,10 +34,19 @@ data class DatabaseConfig(
     val validationTimeoutMs: Long,
 )
 
+data class JwtConfig(
+    val secret: String,
+    val issuer: String,
+    val audience: String,
+    val realm: String,
+    val accessTokenTtlMinutes: Long,
+)
+
 data class AppConfig(
     val serviceName: String,
     val environment: String,
     val logging: AppLogLevel,
+    val jwt: JwtConfig,
     val database: DatabaseConfig,
     val clock: Clock = Clock.systemUTC(),
 ) {
@@ -45,9 +54,16 @@ data class AppConfig(
         fun from(application: Application): AppConfig = from(application.environment.config)
 
         fun from(config: ApplicationConfig): AppConfig = AppConfig(
-            serviceName = "mobile-backend",
+            serviceName = config.propertyOrNull("app.serviceName")?.getString().orEmpty().ifBlank { "mobile-backend" },
             environment = config.propertyOrNull("app.env")?.getString().orEmpty().ifBlank { "local" },
             logging = AppLogLevel.from(config.propertyOrNull("app.logging.level")?.getString()),
+            jwt = JwtConfig(
+                secret = config.propertyOrNull("app.jwt.secret")?.getString().orEmpty().ifBlank { "local-development-secret" },
+                issuer = config.propertyOrNull("app.jwt.issuer")?.getString().orEmpty().ifBlank { "stock-tracker" },
+                audience = config.propertyOrNull("app.jwt.audience")?.getString().orEmpty().ifBlank { "stock-tracker-mobile" },
+                realm = config.propertyOrNull("app.jwt.realm")?.getString().orEmpty().ifBlank { "stock-tracker" },
+                accessTokenTtlMinutes = config.propertyOrNull("app.jwt.accessTokenTtlMinutes")?.getString()?.toLongOrNull() ?: 120L,
+            ),
             database = DatabaseConfig(
                 jdbcUrl = config.propertyOrNull("app.database.jdbcUrl")?.getString(),
                 driverClassName = config.property("app.database.driverClassName").getString(),

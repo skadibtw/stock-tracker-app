@@ -1,6 +1,7 @@
 package com.example.stocktracker.presentation.plugins
 
 import com.example.stocktracker.presentation.http.errors.ApiError
+import com.example.stocktracker.presentation.http.errors.NotFoundException
 import io.github.oshai.kotlinlogging.KotlinLogging
 import io.ktor.http.HttpStatusCode
 import io.ktor.server.application.Application
@@ -23,6 +24,21 @@ fun Application.configureStatusPages() {
                 ApiError(
                     code = "VALIDATION_ERROR",
                     message = cause.message ?: "Invalid request",
+                    traceId = requestId,
+                ),
+            )
+        }
+
+        exception<NotFoundException> { call, cause ->
+            val requestId = call.callId ?: "missing"
+            logger.warn(cause) {
+                "[Application.configureStatusPages] Resource not found {requestId=$requestId}"
+            }
+            call.respond(
+                HttpStatusCode.NotFound,
+                ApiError(
+                    code = "NOT_FOUND",
+                    message = cause.message ?: "Resource not found",
                     traceId = requestId,
                 ),
             )

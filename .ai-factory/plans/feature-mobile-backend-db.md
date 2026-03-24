@@ -48,19 +48,19 @@ Created: 2026-03-24
   - Dependency notes: depends on Tasks 1 and 2.
 
 ### Phase 2: Authentication and trading workflows
-- [ ] **Task 4: Implement registration and login application flows with secure password handling**
+- [x] **Task 4: Implement registration and login application flows with secure password handling**
   - Deliverable: add use cases and adapters for `POST /auth/register` and `POST /auth/login`, including password hashing, duplicate-login protection, and response models suitable for the mobile client.
   - Files: `mobile-backend/src/main/kotlin/com/example/stocktracker/application/auth/*`, `mobile-backend/src/main/kotlin/com/example/stocktracker/domain/auth/*`, `mobile-backend/src/main/kotlin/com/example/stocktracker/infrastructure/security/*`, `mobile-backend/src/main/kotlin/com/example/stocktracker/infrastructure/db/repositories/*`, `mobile-backend/src/main/kotlin/com/example/stocktracker/presentation/http/auth/*`, `mobile-backend/src/main/kotlin/com/example/stocktracker/presentation/http/dto/auth/*`.
   - Logging requirements: log auth command entry, validation outcome, duplicate-login rejections, password verification result without exposing secrets, and auth failures at `WARN`; log successful registration/login milestones at `INFO`; log unexpected security/storage errors at `ERROR`.
   - Dependency notes: depends on Task 3.
 
-- [ ] **Task 5: Implement holdings query for a specific stock with historical purchase data**
+- [x] **Task 5: Implement holdings query for a specific stock with historical purchase data**
   - Deliverable: add the read workflow behind `GET /portfolio/stocks/{symbol}` that returns owned quantity, purchase lots/history, and acquisition prices needed by the mobile stock details screen.
   - Files: `mobile-backend/src/main/kotlin/com/example/stocktracker/application/portfolio/*`, `mobile-backend/src/main/kotlin/com/example/stocktracker/domain/portfolio/*`, `mobile-backend/src/main/kotlin/com/example/stocktracker/infrastructure/db/repositories/*`, `mobile-backend/src/main/kotlin/com/example/stocktracker/presentation/http/portfolio/*`, `mobile-backend/src/main/kotlin/com/example/stocktracker/presentation/http/dto/portfolio/*`.
   - Logging requirements: log request parameters, symbol lookup path, missing-portfolio/missing-symbol cases, aggregation checkpoints, and query latency boundaries; use `DEBUG` for lot aggregation details, `INFO` for successful responses, and `WARN` for not-found/business misses.
   - Dependency notes: depends on Tasks 3 and 4.
 
-- [ ] **Task 6: Implement buy and sell command workflows with auditable transaction history**
+- [x] **Task 6: Implement buy and sell command workflows with auditable transaction history**
   - Deliverable: add use cases, persistence adapters, and HTTP endpoints for `POST /portfolio/stocks/buy` and `POST /portfolio/stocks/sell`, including sell-quantity validation, append-only trade records, and retry-safe command handling where feasible.
   - Files: `mobile-backend/src/main/kotlin/com/example/stocktracker/application/trading/*`, `mobile-backend/src/main/kotlin/com/example/stocktracker/domain/trading/*`, `mobile-backend/src/main/kotlin/com/example/stocktracker/infrastructure/db/repositories/*`, `mobile-backend/src/main/kotlin/com/example/stocktracker/infrastructure/db/transactions/*`, `mobile-backend/src/main/kotlin/com/example/stocktracker/presentation/http/portfolio/*`, `mobile-backend/src/main/kotlin/com/example/stocktracker/presentation/http/dto/trading/*`.
   - Logging requirements: log command receipt, validated quantities/prices, balance or inventory checks, trade persistence boundaries, duplicate-retry detection, and final transaction state; use `DEBUG` for flow tracing, `INFO` for accepted/completed trades, `WARN` for rejected business conditions, and `ERROR` for transactional failures.
