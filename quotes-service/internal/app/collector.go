@@ -70,7 +70,8 @@ func (c *Collector) collectOnce(ctx context.Context) {
 		return
 	}
 
-	items, err := parseSnapshot(string(snapshot), c.sourceName, c.logger)
+	items, malformed, err := parseSnapshot(string(snapshot), c.sourceName, c.logger)
+	c.store.RecordParseErrors(malformed)
 	if err != nil {
 		c.store.MarkUnavailable(err.Error())
 		c.logger.Printf("quotes snapshot rejected: %v", err)
@@ -81,9 +82,10 @@ func (c *Collector) collectOnce(ctx context.Context) {
 }
 
 // parseSnapshot keeps valid lines and rejects an empty or fully broken snapshot.
-func parseSnapshot(snapshot, sourceName string, logger *log.Logger) ([]quotes.Quote, error) {
+func parseSnapshot(snapshot, sourceName string, logger *log.Logger) ([]quotes.Quote, int, error) {
 	lines := strings.Split(snapshot, "\n")
 	items := make([]quotes.Quote, 0, len(lines))
+	malformed := 0
 
 	for _, line := range lines {
 		line = strings.TrimSpace(line)
@@ -93,6 +95,7 @@ func parseSnapshot(snapshot, sourceName string, logger *log.Logger) ([]quotes.Qu
 
 		item, err := quotes.ParseLine(line, sourceName)
 		if err != nil {
+			malformed++
 			logger.Printf("skip malformed line %q: %v", line, err)
 			continue
 		}
@@ -101,10 +104,10 @@ func parseSnapshot(snapshot, sourceName string, logger *log.Logger) ([]quotes.Qu
 
 	if len(items) == 0 {
 		if strings.TrimSpace(snapshot) == "" {
-			return nil, io.EOF
+			return nil, malformed, io.EOF
 		}
-		return nil, errors.New("snapshot contains no valid quotes")
+		return nil, malformed, errors.New("snapshot contains no valid quotes")
 	}
 
-	return items, nil
+	return items, malformed, nil
 }

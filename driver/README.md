@@ -5,8 +5,9 @@
 ## Что делает
 
 - регистрирует символьное устройство `/dev/quotes`
+- публикует статистику и параметры через `/proc/quotes_stats`
 - держит фиксированный набор тикеров
-- обновляет цены раз в `500 ms`
+- обновляет цены раз в `500 ms` по умолчанию
 - при чтении отдает текущий снимок в текстовом формате
 
 Формат строки:
@@ -37,6 +38,7 @@ make
 sudo insmod quotes_driver.ko
 ls -l /dev/quotes
 cat /dev/quotes
+cat /proc/quotes_stats
 ```
 
 Прочитать несколько снимков подряд:
@@ -44,6 +46,21 @@ cat /dev/quotes
 ```bash
 watch -n 1 cat /dev/quotes
 ```
+
+Запуск с кастомными параметрами:
+
+```bash
+sudo insmod quotes_driver.ko update_interval_ms=250 max_delta_cents=120
+cat /proc/quotes_stats
+```
+
+В `/proc/quotes_stats` доступны:
+
+- `update_interval_ms`
+- `max_delta_cents`
+- `read_count`
+- `update_count`
+- `last_update`
 
 ## Остановка
 
@@ -56,4 +73,3 @@ sudo rmmod quotes_driver
 - Драйвер отдает снимок текущего состояния на каждое чтение.
 - Go-сервис рассчитан на polling этого снапшота с заданным интервалом.
 - Для ядра без поддержки загрузки внешних модулей нужен обычный Linux-хост или WSL-конфигурация с module support.
-

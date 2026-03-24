@@ -17,7 +17,7 @@ import (
 func main() {
 	logger := log.New(os.Stdout, "quotes-service: ", log.LstdFlags|log.LUTC)
 	cfg := app.LoadConfig()
-	store := quotes.NewStore()
+	store := quotes.NewStoreWithHistoryLimit(cfg.HistoryLimit)
 	collector := app.NewCollector(app.FileSnapshotReader{Path: cfg.QuotesSource}, store, logger, cfg.SourceName, cfg.PollInterval)
 
 	ctx, stop := signal.NotifyContext(context.Background(), os.Interrupt, syscall.SIGTERM)
@@ -38,7 +38,13 @@ func main() {
 		_ = server.Shutdown(shutdownCtx)
 	}()
 
-	logger.Printf("starting addr=%s source=%s poll_interval=%s", cfg.HTTPAddr, cfg.QuotesSource, cfg.PollInterval)
+	logger.Printf(
+		"starting addr=%s source=%s poll_interval=%s history_limit=%d",
+		cfg.HTTPAddr,
+		cfg.QuotesSource,
+		cfg.PollInterval,
+		cfg.HistoryLimit,
+	)
 
 	if err := server.ListenAndServe(); err != nil && !errors.Is(err, http.ErrServerClosed) {
 		logger.Fatalf("http server failed: %v", err)
