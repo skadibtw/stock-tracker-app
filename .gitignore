@@ -1,3 +1,15 @@
+driver/*.o
+driver/*.ko
+driver/*.mod
+driver/*.mod.c
+driver/*.mod.o
+driver/modules.order
+driver/Module.symvers
+driver/.tmp_versions/
+/.gocache/
+/.gotmp/
+quotes-service/quotes-service
+quotes-service/quotes-service.exe
 .gradle/
 .kotlin/
 build/

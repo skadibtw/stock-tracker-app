@@ -2,22 +2,41 @@
 
 Multi-module repository for a trading and investing platform.
 
-## Current branch scope
-This branch implements the Kotlin backend for the mobile application and the Kotlin database-access layer inside `mobile-backend/`.
+## Modules
+- `mobile-backend/` - Kotlin + Ktor + Exposed backend for auth, portfolio, trading, and statistics
+- `quotes-service/` - Go service that polls quote snapshots, keeps the latest data in memory, and exposes it over HTTP
+- `driver/` - Linux C character device that simulates `/dev/quotes` and publishes quote snapshots
 
-## Module
-- `mobile-backend` - Ktor + Exposed + PostgreSQL backend module for auth, portfolio, buy/sell, and transaction-based statistics
+## Quotes data contract
+- input format: `TICKER PRICE TIMESTAMP`
+- `GET /health`
+- `GET /metrics`
+- `GET /quotes`
+- `GET /quotes/{ticker}`
+- `GET /quotes/{ticker}/history`
 
 ## Documentation
 - `docs/backend-implementation.md` - backend setup, architecture, configuration, and logging
-- `docs/endpoints.md` - HTTP endpoint reference for the current backend scope
+- `docs/endpoints.md` - HTTP endpoint reference for the Kotlin backend
+- `driver/README.md` - Linux quotes driver build and usage
+- `quotes-service/README.md` - Go quotes service configuration and API
 
 ## Run
 ```bash
 ./gradlew :mobile-backend:run
 ```
 
+```bash
+cd quotes-service
+go run ./cmd/quotes-service
+```
+
 ## Test
 ```bash
 ./gradlew :mobile-backend:test
+```
+
+```bash
+cd quotes-service
+go test ./...
 ```
