@@ -10,3 +10,9 @@ driver/.tmp_versions/
 /.gotmp/
 quotes-service/quotes-service
 quotes-service/quotes-service.exe
+.gradle/
+.kotlin/
+build/
+**/build/
+*.iml
+out/

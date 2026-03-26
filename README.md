@@ -1,17 +1,42 @@
 # stock-tracker-app
 
-MVP-подсистема рыночных данных для учебного проекта:
+Multi-module repository for a trading and investing platform.
 
-- `driver/` - Linux character device `/dev/quotes` на C, который имитирует поток котировок.
-- `quotes-service/` - Go-сервис, который опрашивает драйвер, держит актуальные котировки в памяти и отдает их по HTTP API.
+## Modules
+- `mobile-backend/` - Kotlin + Ktor + Exposed backend for auth, portfolio, trading, and statistics
+- `quotes-service/` - Go service that polls quote snapshots, keeps the latest data in memory, and exposes it over HTTP
+- `driver/` - Linux C character device that simulates `/dev/quotes` and publishes quote snapshots
 
-Базовый контракт:
-
-- формат данных драйвера: `TICKER PRICE TIMESTAMP`
+## Quotes data contract
+- input format: `TICKER PRICE TIMESTAMP`
 - `GET /health`
 - `GET /metrics`
 - `GET /quotes`
 - `GET /quotes/{ticker}`
 - `GET /quotes/{ticker}/history`
 
-Подробные инструкции лежат в [driver/README.md](driver/README.md) и [quotes-service/README.md](quotes-service/README.md).
+## Documentation
+- `docs/backend-implementation.md` - backend setup, architecture, configuration, and logging
+- `docs/endpoints.md` - HTTP endpoint reference for the Kotlin backend
+- `driver/README.md` - Linux quotes driver build and usage
+- `quotes-service/README.md` - Go quotes service configuration and API
+
+## Run
+```bash
+./gradlew :mobile-backend:run
+```
+
+```bash
+cd quotes-service
+go run ./cmd/quotes-service
+```
+
+## Test
+```bash
+./gradlew :mobile-backend:test
+```
+
+```bash
+cd quotes-service
+go test ./...
+```
