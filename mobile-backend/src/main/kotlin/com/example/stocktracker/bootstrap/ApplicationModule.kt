@@ -3,6 +3,7 @@ package com.example.stocktracker.bootstrap
 import com.example.stocktracker.application.auth.LoginUserUseCase
 import com.example.stocktracker.application.auth.RegisterUserUseCase
 import com.example.stocktracker.application.common.HealthCheckUseCase
+import com.example.stocktracker.application.market.GetMarketQuoteUseCase
 import com.example.stocktracker.application.portfolio.GetStockHoldingDetailsUseCase
 import com.example.stocktracker.application.statistics.GetPortfolioStatisticsUseCase
 import com.example.stocktracker.application.trading.BuyStockUseCase
@@ -13,6 +14,7 @@ import com.example.stocktracker.infrastructure.db.repositories.ExposedTradeHisto
 import com.example.stocktracker.infrastructure.db.repositories.ExposedUserRepository
 import com.example.stocktracker.infrastructure.db.transactions.DatabaseFactory
 import com.example.stocktracker.infrastructure.logging.LoggingTelemetryRecorder
+import com.example.stocktracker.infrastructure.market.HttpMarketQuoteGateway
 import com.example.stocktracker.infrastructure.security.BcryptPasswordHasher
 import com.example.stocktracker.infrastructure.security.JwtTokenIssuer
 import com.example.stocktracker.presentation.plugins.configureAuthentication
@@ -47,6 +49,7 @@ fun Application.module() {
     val userRepository = ExposedUserRepository()
     val portfolioRepository = ExposedPortfolioRepository()
     val tradeHistoryRepository = ExposedTradeHistoryRepository()
+    val marketQuoteGateway = HttpMarketQuoteGateway(appConfig.marketData)
     val passwordHasher = BcryptPasswordHasher()
     val tokenIssuer = JwtTokenIssuer(appConfig.jwt, appConfig.clock)
     val telemetryRecorder = LoggingTelemetryRecorder()
@@ -78,6 +81,9 @@ fun Application.module() {
         portfolioRepository = portfolioRepository,
         tradeHistoryRepository = tradeHistoryRepository,
     )
+    val getMarketQuoteUseCase = GetMarketQuoteUseCase(
+        marketQuoteGateway = marketQuoteGateway,
+    )
 
     configureCallId()
     configureCallLogging(appConfig)
@@ -90,6 +96,7 @@ fun Application.module() {
         loginUserUseCase = loginUserUseCase,
         getStockHoldingDetailsUseCase = getStockHoldingDetailsUseCase,
         getPortfolioStatisticsUseCase = getPortfolioStatisticsUseCase,
+        getMarketQuoteUseCase = getMarketQuoteUseCase,
         buyStockUseCase = buyStockUseCase,
         sellStockUseCase = sellStockUseCase,
     )

@@ -15,6 +15,7 @@ This branch implements the Kotlin mobile backend and Kotlin database-access laye
 ## Current capabilities
 - User registration with login and password
 - User login with login and password
+- Backend proxy for latest market quotes via the Go quotes service
 - Authenticated stock holding lookup by symbol
 - Authenticated buy and sell operations
 - Authenticated portfolio transaction statistics
@@ -39,6 +40,8 @@ Important environment variables:
 - `JWT_AUDIENCE`
 - `JWT_REALM`
 - `APP_ENV`
+- `QUOTES_SERVICE_BASE_URL`
+- `QUOTES_SERVICE_CURRENCY`
 
 ## Logging model
 The backend uses verbose logging by default in implementation code.
@@ -59,9 +62,9 @@ Log levels:
 - `ERROR` - unexpected failures
 
 ## Integration notes
-- Public quotes remain an external concern; this backend exposes transaction-based data for the mobile client.
+- Public quotes are read through `QUOTES_SERVICE_BASE_URL`, which points at the Go service that polls `/dev/quotes` from the Linux driver.
 - JWT carries `portfolioId`, which keeps current protected portfolio routes integration-ready.
-- Placeholder ports exist for market-quote access and telemetry integration so the backend can be extended toward Go quote ingestion and OpenTelemetry later.
+- The backend now exposes `GET /market/quotes/{symbol}` as the first Kotlin-side integration point for the Go plus C quote pipeline.
 
 ## Verification
 Current verification commands:

@@ -8,6 +8,7 @@ data class MarketQuoteSnapshot(
     val symbol: StockSymbol,
     val price: Money,
     val collectedAt: Instant,
+    val source: String?,
 )
 
 interface MarketQuoteGateway {

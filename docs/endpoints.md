@@ -47,6 +47,24 @@ Response `200 OK`:
 ## Portfolio
 All portfolio endpoints require `Authorization: Bearer <jwt>`.
 
+## Market Data
+
+### `GET /market/quotes/{symbol}`
+Returns the latest quote that the Kotlin backend reads from the Go quotes service, which in turn polls the Linux C driver.
+
+Response `200 OK`:
+```json
+{
+  "symbol": "AAPL",
+  "price": "214.55",
+  "currency": "USD",
+  "collectedAt": "2026-03-24T15:10:00Z",
+  "source": "linux-driver"
+}
+```
+
+Response `503 Service Unavailable` is returned when the Go quotes service is down, not configured, or cannot currently read from the Linux driver.
+
 ### `GET /portfolio/stocks/{symbol}`
 Returns acquisition history for one stock symbol in the authenticated portfolio.
 

@@ -42,12 +42,19 @@ data class JwtConfig(
     val accessTokenTtlMinutes: Long,
 )
 
+data class MarketDataConfig(
+    val baseUrl: String?,
+    val quoteCurrency: String,
+    val timeoutMs: Long,
+)
+
 data class AppConfig(
     val serviceName: String,
     val environment: String,
     val logging: AppLogLevel,
     val jwt: JwtConfig,
     val observability: ObservabilityConfig,
+    val marketData: MarketDataConfig,
     val database: DatabaseConfig,
     val clock: Clock = Clock.systemUTC(),
 ) {
@@ -68,6 +75,11 @@ data class AppConfig(
             observability = ObservabilityConfig(
                 tracingEnabled = config.propertyOrNull("app.observability.tracingEnabled")?.getString()?.toBooleanStrictOrNull() ?: true,
                 serviceName = config.propertyOrNull("app.observability.serviceName")?.getString().orEmpty().ifBlank { "mobile-backend" },
+            ),
+            marketData = MarketDataConfig(
+                baseUrl = config.propertyOrNull("app.marketData.baseUrl")?.getString()?.ifBlank { null },
+                quoteCurrency = config.propertyOrNull("app.marketData.quoteCurrency")?.getString().orEmpty().ifBlank { "USD" },
+                timeoutMs = config.propertyOrNull("app.marketData.timeoutMs")?.getString()?.toLongOrNull() ?: 3000L,
             ),
             database = DatabaseConfig(
                 jdbcUrl = config.propertyOrNull("app.database.jdbcUrl")?.getString(),

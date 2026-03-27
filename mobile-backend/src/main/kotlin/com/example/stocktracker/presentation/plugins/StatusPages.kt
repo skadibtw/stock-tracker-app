@@ -2,6 +2,7 @@ package com.example.stocktracker.presentation.plugins
 
 import com.example.stocktracker.presentation.http.errors.ApiError
 import com.example.stocktracker.presentation.http.errors.NotFoundException
+import com.example.stocktracker.presentation.http.errors.ServiceUnavailableException
 import io.github.oshai.kotlinlogging.KotlinLogging
 import io.ktor.http.HttpStatusCode
 import io.ktor.server.application.Application
@@ -39,6 +40,21 @@ fun Application.configureStatusPages() {
                 ApiError(
                     code = "NOT_FOUND",
                     message = cause.message ?: "Resource not found",
+                    traceId = requestId,
+                ),
+            )
+        }
+
+        exception<ServiceUnavailableException> { call, cause ->
+            val requestId = call.callId ?: "missing"
+            logger.warn(cause) {
+                "[Application.configureStatusPages] Dependency unavailable {requestId=$requestId}"
+            }
+            call.respond(
+                HttpStatusCode.ServiceUnavailable,
+                ApiError(
+                    code = "SERVICE_UNAVAILABLE",
+                    message = cause.message ?: "Service unavailable",
                     traceId = requestId,
                 ),
             )

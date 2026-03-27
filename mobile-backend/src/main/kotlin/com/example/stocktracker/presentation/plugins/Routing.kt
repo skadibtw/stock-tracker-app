@@ -2,11 +2,13 @@ package com.example.stocktracker.presentation.plugins
 
 import com.example.stocktracker.application.common.HealthCheckUseCase
 import com.example.stocktracker.application.auth.LoginUserUseCase
+import com.example.stocktracker.application.market.GetMarketQuoteUseCase
 import com.example.stocktracker.application.portfolio.GetStockHoldingDetailsUseCase
 import com.example.stocktracker.application.auth.RegisterUserUseCase
 import com.example.stocktracker.application.statistics.GetPortfolioStatisticsUseCase
 import com.example.stocktracker.application.trading.BuyStockUseCase
 import com.example.stocktracker.application.trading.SellStockUseCase
+import com.example.stocktracker.presentation.http.market.marketRoutes
 import com.example.stocktracker.presentation.http.auth.authRoutes
 import com.example.stocktracker.presentation.http.common.healthRoutes
 import com.example.stocktracker.presentation.http.portfolio.portfolioRoutes
@@ -24,14 +26,16 @@ fun Application.configureRouting(
     loginUserUseCase: LoginUserUseCase,
     getStockHoldingDetailsUseCase: GetStockHoldingDetailsUseCase,
     getPortfolioStatisticsUseCase: GetPortfolioStatisticsUseCase,
+    getMarketQuoteUseCase: GetMarketQuoteUseCase,
     buyStockUseCase: BuyStockUseCase,
     sellStockUseCase: SellStockUseCase,
 ) {
-    logger.info { "[Application.configureRouting] Registering route groups {groupCount=5}" }
+    logger.info { "[Application.configureRouting] Registering route groups {groupCount=6}" }
 
     routing {
         healthRoutes(healthCheckUseCase)
         authRoutes(registerUserUseCase, loginUserUseCase)
+        marketRoutes(getMarketQuoteUseCase)
         portfolioRoutes(getStockHoldingDetailsUseCase)
         tradingRoutes(buyStockUseCase, sellStockUseCase)
         statisticsRoutes(getPortfolioStatisticsUseCase)
