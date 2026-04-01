@@ -1,0 +1,180 @@
+<?xml version="1.0" encoding="utf-8"?>
+<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:padding="16dp">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical">
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Статистика"
+            android:textSize="24sp"
+            android:textStyle="bold"
+            android:layout_marginBottom="16dp" />
+
+        <androidx.cardview.widget.CardView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginBottom="16dp"
+            app:cardCornerRadius="8dp">
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical"
+                android:padding="16dp">
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Статистика сделок"
+                    android:textSize="20sp"
+                    android:textStyle="bold"
+                    android:layout_marginBottom="8dp" />
+
+                <TextView
+                    android:id="@+id/totalTradesTextView"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Всего сделок: 24"
+                    android:textSize="16sp"
+                    android:layout_marginVertical="4dp" />
+
+                <TextView
+                    android:id="@+id/successfulTradesTextView"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Успешных сделок: 18"
+                    android:textSize="16sp"
+                    android:layout_marginVertical="4dp" />
+
+                <TextView
+                    android:id="@+id/profitTextView"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Прибыль: +15,420 ₽"
+                    android:textSize="16sp"
+                    android:layout_marginVertical="4dp" />
+
+                <TextView
+                    android:id="@+id/successRateTextView"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Процент успеха: 75%"
+                    android:textSize="16sp"
+                    android:layout_marginVertical="4dp" />
+
+                <TextView
+                    android:id="@+id/bestTradeTextView"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Лучшая сделка: SBER +2,500 ₽"
+                    android:textSize="16sp"
+                    android:layout_marginVertical="4dp" />
+
+            </LinearLayout>
+        </androidx.cardview.widget.CardView>
+
+        <androidx.cardview.widget.CardView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            app:cardCornerRadius="8dp">
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical"
+                android:padding="16dp">
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Статистика портфеля"
+                    android:textSize="20sp"
+                    android:textStyle="bold"
+                    android:layout_marginBottom="8dp" />
+
+                <TextView
+                    android:id="@+id/totalStocksTextView"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Всего акций в портфеле: 8"
+                    android:textSize="16sp"
+                    android:layout_marginVertical="4dp" />
+
+                <TextView
+                    android:id="@+id/totalValueTextView"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Общая стоимость: 124,567 ₽"
+                    android:textSize="16sp"
+                    android:layout_marginVertical="4dp" />
+
+                <TextView
+                    android:id="@+id/dailyChangeTextView"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Дневное изменение: +2,345 ₽ (+1.9%)"
+                    android:textSize="16sp"
+                    android:layout_marginVertical="4dp" />
+
+                <TextView
+                    android:id="@+id/unrealizedProfitTextView"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Нереализованная прибыль: +15,678 ₽"
+                    android:textSize="16sp"
+                    android:layout_marginVertical="4dp" />
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Топ акций"
+                    android:textSize="18sp"
+                    android:textStyle="bold"
+                    android:layout_marginTop="12dp"
+                    android:layout_marginBottom="4dp" />
+
+                <TextView
+                    android:id="@+id/bestStockTextView"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Лучшая: YNDX (+2.1%)"
+                    android:textSize="16sp"
+                    android:layout_marginVertical="2dp" />
+
+                <TextView
+                    android:id="@+id/worstStockTextView"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Худшая: MGNT (-1.1%)"
+                    android:textSize="16sp"
+                    android:layout_marginVertical="2dp" />
+
+                <TextView
+                    android:id="@+id/mostExpensiveStockTextView"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Самая дорогая: LKOH (7,450 ₽)"
+                    android:textSize="16sp"
+                    android:layout_marginVertical="2dp" />
+
+                <TextView
+                    android:id="@+id/cheapestStockTextView"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Самая дешевая: VTBR (0.0235 ₽)"
+                    android:textSize="16sp"
+                    android:layout_marginVertical="2dp" />
+
+            </LinearLayout>
+        </androidx.cardview.widget.CardView>
+
+    </LinearLayout>
+</ScrollView>
