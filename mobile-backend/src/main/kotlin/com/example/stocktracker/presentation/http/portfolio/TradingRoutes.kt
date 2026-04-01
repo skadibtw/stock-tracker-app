@@ -10,9 +10,9 @@ import com.example.stocktracker.presentation.http.dto.trading.SellStockRequest
 import com.example.stocktracker.presentation.http.dto.trading.toResponse
 import io.github.oshai.kotlinlogging.KotlinLogging
 import io.ktor.http.HttpStatusCode
+import io.ktor.server.auth.authentication
 import io.ktor.server.auth.authenticate
 import io.ktor.server.auth.jwt.JWTPrincipal
-import io.ktor.server.auth.principal
 import io.ktor.server.request.receive
 import io.ktor.server.response.respond
 import io.ktor.server.routing.Route
@@ -30,7 +30,7 @@ fun Route.tradingRoutes(
     authenticate("auth-jwt") {
         route("/portfolio/stocks") {
             post("/buy") {
-                val principal = call.principal<JWTPrincipal>() ?: error("Missing JWT principal")
+                val principal = call.authentication.principal<JWTPrincipal>() ?: error("Missing JWT principal")
                 val request = call.receive<BuyStockRequest>()
                 val portfolioId = PortfolioId(UUID.fromString(principal.payload.getClaim("portfolioId").asString()))
 
@@ -48,7 +48,7 @@ fun Route.tradingRoutes(
             }
 
             post("/sell") {
-                val principal = call.principal<JWTPrincipal>() ?: error("Missing JWT principal")
+                val principal = call.authentication.principal<JWTPrincipal>() ?: error("Missing JWT principal")
                 val request = call.receive<SellStockRequest>()
                 val portfolioId = PortfolioId(UUID.fromString(principal.payload.getClaim("portfolioId").asString()))
 

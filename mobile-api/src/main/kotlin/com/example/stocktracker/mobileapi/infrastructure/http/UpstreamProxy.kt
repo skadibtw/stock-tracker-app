@@ -6,6 +6,7 @@ import io.opentelemetry.api.trace.SpanKind
 import io.opentelemetry.api.trace.Tracer
 import io.opentelemetry.context.Context
 import io.ktor.client.HttpClient
+import io.ktor.client.request.header
 import io.ktor.client.request.request
 import io.ktor.client.request.setBody
 import io.ktor.client.statement.readRawBytes
@@ -60,12 +61,16 @@ class UpstreamProxy(
                 httpClient.request {
                     url.takeFrom(targetUrl)
                     method = requestMethod
+                    call.request.headers[HttpHeaders.Authorization]?.takeIf { it.isNotBlank() }?.let { authorizationHeader ->
+                        header(HttpHeaders.Authorization, authorizationHeader)
+                    }
+                    call.request.headers[HttpHeaders.Accept]?.takeIf { it.isNotBlank() }?.let { acceptHeader ->
+                        header(HttpHeaders.Accept, acceptHeader)
+                    }
+                    call.callId?.let { requestId ->
+                        header("X-Request-Id", requestId)
+                    }
                     headers {
-                        forwardHeaderIfPresent(call, HttpHeaders.Authorization)
-                        forwardHeaderIfPresent(call, HttpHeaders.Accept)
-                        call.callId?.let { requestId ->
-                            set("X-Request-Id", requestId)
-                        }
                         GlobalOpenTelemetry.getPropagators().textMapPropagator.inject(
                             Context.current(),
                             this,
@@ -101,12 +106,6 @@ class UpstreamProxy(
             )
         } finally {
             span.end()
-        }
-    }
-
-    private fun io.ktor.http.HeadersBuilder.forwardHeaderIfPresent(call: RoutingCall, headerName: String) {
-        call.request.headers[headerName]?.takeIf { it.isNotBlank() }?.let { headerValue ->
-            set(headerName, headerValue)
         }
     }
 }
