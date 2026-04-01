@@ -1,0 +1,443 @@
+\documentclass[12pt,a4paper]{article}
+
+\usepackage{fontspec}
+\usepackage{polyglossia}
+\usepackage{geometry}
+\usepackage{array}
+\usepackage{longtable}
+\usepackage{booktabs}
+\usepackage{enumitem}
+\usepackage{setspace}
+\usepackage{hyperref}
+
+\geometry{margin=2.2cm}
+\setstretch{1.2}
+\setmainlanguage{russian}
+\setotherlanguage{english}
+\setmainfont{Times New Roman}
+\setsansfont{Arial}
+\setmonofont{Courier New}
+\newfontfamily\cyrillicfont{Times New Roman}
+\newfontfamily\cyrillicfontsf{Arial}
+\newfontfamily\cyrillicfonttt{Times New Roman}
+\hypersetup{
+    colorlinks=true,
+    linkcolor=black,
+    urlcolor=blue,
+    citecolor=black
+}
+\urlstyle{same}
+
+\begin{document}
+
+\begin{titlepage}
+    \begin{center}
+        \textbf{Университет ИТМО}\\
+        Факультет программной инженерии и компьютерной техники\\[2cm]
+
+        \textbf{\Large Отчёт по групповому проекту}\\[0.3cm]
+        \textbf{\large по курсу <<Разработка мобильных приложений>>}\\[1.4cm]
+
+        \textbf{\Large Система отслеживания акций и портфеля}\\[0.4cm]
+        Android-клиент, backend, сервис котировок и observability-контур\\[2cm]
+    \end{center}
+
+    \begin{flushright}
+        \begin{tabular}{rl}
+            Студент: & \underline{\hspace{6.5cm}} \\
+            Группа: & \underline{\hspace{6.5cm}} \\
+            Команда проекта: & \underline{\hspace{6.5cm}} \\
+            Преподаватель: & Ключев А.\,О. \\
+        \end{tabular}
+    \end{flushright}
+
+    \vfill
+
+    \begin{center}
+        Санкт-Петербург\\
+        2026
+    \end{center}
+\end{titlepage}
+
+\tableofcontents
+\newpage
+
+\section*{Введение}
+\addcontentsline{toc}{section}{Введение}
+
+Групповой проект по курсу <<Разработка мобильных приложений>> направлен на создание многокомпонентной системы для просмотра рыночных котировок, ведения пользовательского портфеля и выполнения операций покупки и продажи акций. На момент подготовки этого отчёта проект уже вышел за пределы монолитного учебного backend и включает Android-клиент, мобильный API-шлюз, транзакционный backend, отдельный сервис котировок на Go, а также контейнеризированный стек observability.
+
+Отчёт подготовлен по актуальному состоянию репозитория после обновления ветки \texttt{main} на 1 апреля 2026 года и повторного импорта Android-клиента из внешнего репозитория команды. Старые feature-ветки общего репозитория рассмотрены как этапы развития backend-части, а архитектурный baseline определяется именно актуальным \texttt{main}. Структура отчёта соответствует требованиям лекционных материалов курса: техническое задание, описание архитектуры, описание реализации и описание системы тестирования~[1].
+
+\section{Техническое задание}
+
+\subsection{Введение}
+
+Разрабатываемая система предназначена для демонстрации архитектурных и прикладных аспектов мобильной разработки: пользовательский интерфейс Android-приложения, взаимодействие с backend API, работа с котировками, хранение транзакционных и аналитических данных, а также сбор telemetry-данных для диагностики распределённой системы.
+
+Проект рассматривается как учебная торгово-информационная платформа. Пользователь системы должен иметь возможность зарегистрироваться, войти в приложение, получить актуальную котировку по тикеру, выполнить покупку или продажу актива и увидеть агрегированную статистику своего портфеля.
+
+\subsection{Назначение разработки}
+
+Назначение разработки заключается в создании многомодульного мобильного программного комплекса, который:
+
+\begin{itemize}[leftmargin=1.2cm]
+    \item предоставляет Android-клиент для взаимодействия с пользователем;
+    \item предоставляет backend API для аутентификации и операций с портфелем;
+    \item получает и публикует рыночные котировки;
+    \item демонстрирует работу распределённой архитектуры с observability-подсистемой;
+    \item обеспечивает базу для дальнейшего расширения системы тестирования и документации.
+\end{itemize}
+
+\subsection{Требования к программе или программному изделию}
+
+\subsubsection{Функции системы}
+
+Система должна обеспечивать следующие функции:
+
+\begin{enumerate}[leftmargin=1.2cm]
+    \item Регистрация пользователя по логину и паролю.
+    \item Аутентификация пользователя и выдача access token.
+    \item Просмотр актуальной котировки по тикеру.
+    \item Просмотр информации о владении выбранной акцией в портфеле.
+    \item Выполнение операций покупки и продажи акций.
+    \item Получение агрегированной статистики портфеля.
+    \item Ведение истории котировок и публикация событий в инфраструктурные каналы.
+    \item Сбор трассировок и технических данных для анализа работы сервисов.
+\end{enumerate}
+
+\subsubsection{Состав системы}
+
+В состав системы входят:
+
+\begin{itemize}[leftmargin=1.2cm]
+    \item Android-клиент \texttt{android-app/};
+    \item публичный API gateway \texttt{mobile-api/};
+    \item транзакционный сервис портфеля \texttt{mobile-backend/};
+    \item сервис котировок \texttt{quotes-service/};
+    \item Linux C-драйвер \texttt{driver/} как низкоуровневый источник котировок;
+    \item PostgreSQL для транзакционных данных;
+    \item Redis для событий и latest-cache;
+    \item ClickHouse для истории котировок;
+    \item OpenTelemetry Collector, Tempo, Prometheus, Loki и Grafana для наблюдаемости;
+    \item документация проекта и база знаний в Obsidian.
+\end{itemize}
+
+\subsubsection{Характеристики системы}
+
+К системе предъявляются следующие характеристики:
+
+\begin{itemize}[leftmargin=1.2cm]
+    \item модульность и разделение ответственности между клиентом, gateway, backend и сервисом котировок;
+    \item возможность локального запуска в Docker Compose;
+    \item расширяемость по API, хранилищам и observability;
+    \item поддержка трассировки запросов через OpenTelemetry;
+    \item наличие автоматизированных тестов хотя бы для части backend-компонентов;
+    \item документированность архитектуры, реализации и тестирования;
+    \item возможность дальнейшей интеграции Android-клиента с реальным backend API.
+\end{itemize}
+
+\section{Описание архитектуры}
+
+\subsection{Архитектурная идея}
+
+Ключевая идея проекта состоит в разделении системы на несколько относительно независимых подсистем. Такое разделение позволяет не смешивать клиентский UI, бизнес-логику портфеля, рыночные данные, техническую инфраструктуру и observability. Для учебного проекта это особенно важно, так как даёт возможность параллельной работы нескольких участников команды и упрощает понимание внутренних границ системы.
+
+В актуальном состоянии архитектура имеет сервисный характер:
+
+\begin{itemize}[leftmargin=1.2cm]
+    \item Android-клиент отвечает за пользовательский интерфейс;
+    \item \texttt{mobile-api} является внешней точкой входа для мобильных приложений;
+    \item \texttt{mobile-backend} реализует бизнес-логику аутентификации, портфеля и торговых операций;
+    \item \texttt{quotes-service} поставляет актуальные котировки и историю;
+    \item инфраструктурный слой хранит данные и собирает телеметрию.
+\end{itemize}
+
+\subsection{Декомпозиция на компоненты}
+
+\begin{longtable}{p{0.23\textwidth} p{0.7\textwidth}}
+\toprule
+\textbf{Компонент} & \textbf{Архитектурная роль} \\
+\midrule
+\endhead
+\texttt{android-app} & Android-прототип с экранами логина, профиля, статистики, списка акций и карточки акции. Пока интегрирован с backend лишь концептуально. \\
+\texttt{mobile-api} & Ktor gateway, который принимает клиентские HTTP-запросы, выполняет общие middleware-функции и проксирует запросы во внутренние сервисы. \\
+\texttt{mobile-backend} & Транзакционный сервис портфеля. Управляет пользователями, JWT, операциями покупки и продажи, статистикой и взаимодействием с PostgreSQL. \\
+\texttt{quotes-service} & Go-сервис чтения котировок, поддерживающий mock-источник и Linux-драйвер, а также публикацию данных в Redis и ClickHouse. \\
+\texttt{driver} & Симуляция устройства \texttt{/dev/quotes} на стороне Linux-хоста. Нужен как низкоуровневая часть учебной задачи по источнику рыночных данных. \\
+\texttt{postgres} & Основное хранилище пользователей, портфелей, lot-структур и истории сделок. \\
+\texttt{redis} & Канал Streams для событий и быстрый storage latest-cache по котировкам. \\
+\texttt{clickhouse} & Хранилище истории котировок, удобное для аналитических и временных запросов. \\
+\texttt{otel-collector} и related stack & Приём и маршрутизация telemetry-сигналов от сервисов, интеграция с Tempo, Prometheus, Loki и Grafana. \\
+\bottomrule
+\end{longtable}
+
+\subsection{Внутренняя архитектура Kotlin backend}
+
+Сервис \texttt{mobile-backend} построен по модели слоистой архитектуры, близкой к Clean Architecture~[2]. Внутренние пакеты разделены на:
+
+\begin{itemize}[leftmargin=1.2cm]
+    \item \texttt{presentation} --- HTTP-маршруты, DTO, плагины Ktor, обработка ошибок;
+    \item \texttt{application} --- use case и порты;
+    \item \texttt{domain} --- предметные сущности и value objects;
+    \item \texttt{infrastructure} --- БД, безопасность, Redis, OpenTelemetry, HTTP-клиенты и конфигурация.
+\end{itemize}
+
+Такое разделение делает use case слабее связанными с Ktor, JDBC и конкретными внешними библиотеками. В результате тестирование логики регистрации, торговли и статистики возможно без полного запуска серверного окружения.
+
+\subsection{Основные потоки взаимодействия}
+
+\subsubsection{Сценарий аутентификации и торговых операций}
+
+\begin{enumerate}[leftmargin=1.2cm]
+    \item Клиент отправляет запрос в \texttt{mobile-api}.
+    \item \texttt{mobile-api} создаёт trace/span, фиксирует request context и пересылает запрос в \texttt{mobile-backend}.
+    \item \texttt{mobile-backend} выполняет use case, при необходимости обращается к PostgreSQL и публикует событие в Redis Streams.
+    \item Ответ возвращается назад через \texttt{mobile-api}.
+\end{enumerate}
+
+\subsubsection{Сценарий получения котировок}
+
+\begin{enumerate}[leftmargin=1.2cm]
+    \item \texttt{quotes-service} регулярно считывает снапшоты котировок из mock-файла или из \texttt{/dev/quotes}.
+    \item Сервис обновляет in-memory state, latest-cache в Redis и историю в ClickHouse.
+    \item \texttt{mobile-backend} обращается к \texttt{quotes-service} за актуальной ценой.
+    \item \texttt{mobile-api} возвращает котировку мобильному клиенту.
+\end{enumerate}
+
+\subsection{Хранилища и интеграции}
+
+Хранилища выбраны не случайно, а по ролям:
+
+\begin{itemize}[leftmargin=1.2cm]
+    \item PostgreSQL хранит транзакционные данные, где важны консистентность и работа с отношениями;
+    \item Redis используется для Streams и быстрого latest-cache;
+    \item ClickHouse хранит историю котировок как аналитический временной ряд.
+\end{itemize}
+
+Такое разделение упрощает дальнейший рост проекта: транзакционные и аналитические нагрузки не смешиваются, а события можно использовать для новых фоновых сервисов.
+
+\subsection{Наблюдаемость и OpenTelemetry}
+
+В проекте уже реализован базовый контур наблюдаемости:
+
+\begin{itemize}[leftmargin=1.2cm]
+    \item \texttt{mobile-api} создаёт серверные span на HTTP-запросы;
+    \item \texttt{mobile-backend} использует \texttt{OpenTelemetryTelemetryRecorder} для внутренних span;
+    \item \texttt{quotes-service} подключает OTLP exporter для Go;
+    \item \texttt{otel-collector} принимает traces, metrics и logs и передаёт traces в Tempo~[6].
+\end{itemize}
+
+Архитектурно это важно по двум причинам. Во-первых, observability встроена в систему не как внешняя надстройка, а как часть её runtime-модели. Во-вторых, наличие gateway и нескольких backend-компонентов делает распределённую трассировку действительно полезной.
+
+\subsection{Анализ веток и источников проекта}
+
+При подготовке архитектурного описания важно учитывать историю репозитория. В проекте присутствуют ветки \texttt{origin/feature/market-data} и \texttt{origin/feature/mobile-backend-db}, однако обе они уже не содержат уникальных коммитов относительно актуального \texttt{origin/main}. Следовательно, они представляют ранние этапы развития backend, но не определяют текущее состояние системы.
+
+Android-клиент, наоборот, не находился в общем Git-источнике проекта и был импортирован отдельно из внешнего репозитория команды. Поэтому архитектурно проект сейчас состоит из двух линий происхождения: основной backend-контур из общего репозитория и отдельно созданный клиентский Android-прототип. Это необходимо честно фиксировать в отчёте, чтобы не возникало ложного впечатления, будто весь проект развивался в одном и том же дереве исходников с самого начала.
+
+\subsection{Архитектурные ограничения}
+
+Несмотря на сильную серверную часть, есть и важные ограничения:
+
+\begin{itemize}[leftmargin=1.2cm]
+    \item Android-клиент пока не работает с реальным API проекта;
+    \item в карточке акции покупка и продажа ещё не привязаны к backend;
+    \item часть UI-статистики и графиков работает на моках;
+    \item у \texttt{mobile-api} пока нет собственного тестового набора.
+\end{itemize}
+
+Эти ограничения не отменяют архитектуру, но показывают, где проходит граница между уже реализованным контуром и следующим этапом интеграции.
+
+\section{Описание реализации}
+
+\subsection{Android-клиент}
+
+Импортированный Android-клиент реализован на Kotlin с использованием классического стека Android Views, XML layouts, \texttt{Activity}, \texttt{Fragment}, \texttt{RecyclerView} и \texttt{BottomNavigationView}~[4]. Основные точки входа:
+
+\begin{itemize}[leftmargin=1.2cm]
+    \item \texttt{MainActivity} --- экран входа;
+    \item \texttt{SecondActivity} --- контейнер нижней навигации;
+    \item \texttt{ProfileFragment}, \texttt{StatisticsFragment}, \texttt{StockListFragment}, \texttt{StockChartFragment} --- основные пользовательские экраны.
+\end{itemize}
+
+Текущая реализация клиента носит прототипный характер. Вход реализован локальной проверкой непустых полей, котировки берутся напрямую из MOEX ISS через \texttt{HttpURLConnection}, а в части экранов используются локально сгенерированные значения. Тем не менее экранная структура уже хорошо подготовлена для подключения реального backend API.
+
+\subsection{API gateway}
+
+Модуль \texttt{mobile-api} реализован на Ktor~[3]. Его \texttt{ApplicationModule} выполняет:
+
+\begin{itemize}[leftmargin=1.2cm]
+    \item загрузку конфигурации;
+    \item создание OpenTelemetry handle;
+    \item создание HTTP-клиента для upstream;
+    \item подключение Ktor plugins: call id, logging, content negotiation, tracing, status pages, routing.
+\end{itemize}
+
+Маршруты gateway повторяют клиентский API-контракт и проксируют вызовы к \texttt{mobile-backend}. Такой слой полезен не только как reverse proxy, но и как архитектурный буфер между мобильным приложением и внутренними сервисами.
+
+\subsection{Транзакционный backend}
+
+Модуль \texttt{mobile-backend} является самым зрелым функциональным слоем проекта. В bootstrap создаются:
+
+\begin{itemize}[leftmargin=1.2cm]
+    \item use case аутентификации;
+    \item use case торговли;
+    \item use case чтения деталей владения;
+    \item use case получения статистики;
+    \item репозитории Exposed;
+    \item publisher событий в Redis Streams;
+    \item компонент для записи telemetry-событий;
+    \item JWT и password hashing инфраструктура.
+\end{itemize}
+
+Из реализованных HTTP-операций в backend доступны регистрация, вход, получение котировки, получение информации по акции, покупка, продажа и статистика портфеля. На текущем этапе это ядро серверной части всей системы.
+
+\subsection{Сервис котировок и инфраструктура}
+
+\texttt{quotes-service} реализован на Go и запускает HTTP-сервер с маршрутом \texttt{/health}, \texttt{/metrics}, \texttt{/quotes}, \texttt{/quotes/\{ticker\}} и \texttt{/quotes/\{ticker\}/history}. Сервис умеет:
+
+\begin{itemize}[leftmargin=1.2cm]
+    \item читать котировки из mock-файла или из Linux-источника;
+    \item держать актуальное состояние в памяти;
+    \item публиковать latest-state и события в Redis;
+    \item сохранять историю в ClickHouse;
+    \item оборачивать HTTP-обработчики через OpenTelemetry middleware.
+\end{itemize}
+
+Верхний уровень инфраструктуры описан в \texttt{docker-compose.yml}. Он поднимает \texttt{caddy}, \texttt{postgres}, \texttt{redis}, \texttt{clickhouse}, \texttt{quotes-service}, \texttt{portfolio-service}, \texttt{mobile-api}, \texttt{otel-collector}, \texttt{loki}, \texttt{tempo}, \texttt{prometheus} и \texttt{grafana}. Таким образом, проект уже имеет полноценный локальный стенд для разработки и демонстрации.
+
+\subsection{Документация и база знаний}
+
+В рамках подготовки сдачи были заново сформированы:
+
+\begin{itemize}[leftmargin=1.2cm]
+    \item проектная документация в каталоге \texttt{docs/};
+    \item база знаний Obsidian в каталоге \texttt{knowledge-base/obsidian/};
+    \item исходный LaTeX-текст отчёта и PDF-сборка.
+\end{itemize}
+
+Такой набор материалов соответствует требованиям курса: знания фиксируются не только в коде, но и в поясняющих артефактах, которые можно использовать при защите и передаче проекта внутри команды.
+
+\section{Описание системы тестирования}
+
+\subsection{Требуемые уровни тестирования}
+
+Согласно лекционным материалам, в отчёте должны быть отражены три уровня тестирования: модульное, интеграционное и системное~[1]. В текущем проекте это особенно важно, так как система распределена по нескольким технологиям и языкам.
+
+\subsection{Текущее покрытие тестами}
+
+\subsubsection{Модульное и интеграционное тестирование backend}
+
+Наиболее развито тестирование в \texttt{mobile-backend}. В репозитории присутствуют тесты для:
+
+\begin{itemize}[leftmargin=1.2cm]
+    \item регистрации пользователя;
+    \item получения рыночной котировки;
+    \item чтения деталей владения акцией;
+    \item расчёта статистики портфеля;
+    \item логики продажи акций;
+    \item репозитория пользователей;
+    \item HTTP-маршрутов аутентификации;
+    \item HTTP-маршрутов рыночных данных.
+\end{itemize}
+
+Для \texttt{quotes-service} присутствуют тесты парсинга, store и HTTP-обработчиков. Следовательно, серверная часть уже имеет реальную основу автоматизированной проверки, а не только декларативное описание.
+
+\subsubsection{Недостающие области}
+
+У \texttt{mobile-api} подключены зависимости для тестирования, но собственного каталога \texttt{src/test} пока нет. У \texttt{android-app} присутствуют шаблонные зависимости для unit и instrumentation testing, однако содержательных тестов пока не реализовано.
+
+\subsection{Предлагаемая стратегия дальнейшего развития}
+
+\subsubsection{Модульное тестирование}
+
+Должно покрывать:
+
+\begin{itemize}[leftmargin=1.2cm]
+    \item use case backend;
+    \item парсинг и преобразование котировок;
+    \item DTO и data layer Android-клиента после интеграции с API;
+    \item вспомогательные функции observability и request context.
+\end{itemize}
+
+\subsubsection{Интеграционное тестирование}
+
+Должно покрывать:
+
+\begin{itemize}[leftmargin=1.2cm]
+    \item \texttt{mobile-api} + mock upstream;
+    \item \texttt{mobile-backend} + тестовая БД;
+    \item \texttt{quotes-service} + тестовые Redis/ClickHouse doubles;
+    \item Android data layer + mock web server.
+\end{itemize}
+
+\subsubsection{Системное тестирование}
+
+Минимальный end-to-end сценарий должен включать:
+
+\begin{enumerate}[leftmargin=1.2cm]
+    \item регистрацию нового пользователя;
+    \item вход и получение JWT;
+    \item запрос актуальной котировки;
+    \item выполнение операции покупки;
+    \item чтение статистики портфеля;
+    \item проверку появления trace в observability stack.
+\end{enumerate}
+
+\subsection{Тестовое инструментальное обеспечение}
+
+Для системных и интеграционных сценариев полезно разработать небольшое инструментальное ПО на Kotlin, Go или Python, как это и предлагается в материалах курса~[1]. Практически это может быть:
+
+\begin{itemize}[leftmargin=1.2cm]
+    \item CLI-клиент или набор сценариев для вызова API;
+    \item нагрузочный генератор пользовательских сессий;
+    \item набор smoke-сценариев для проверки Docker-стенда;
+    \item утилита проверки наличия trace/span после сценария сделки.
+\end{itemize}
+
+\subsection{Вывод по тестированию}
+
+Система тестирования уже имеет работающую основу в backend- и Go-частях, но в целом ещё не завершена. Для полного соответствия архитектуре проекта необходимо выровнять тестовую зрелость \texttt{mobile-api} и Android-клиента и добавить сквозные системные сценарии.
+
+\section*{Заключение}
+\addcontentsline{toc}{section}{Заключение}
+
+В ходе работы был заново собран комплект отчётных материалов по актуальному состоянию проекта после обновления общего репозитория и импорта Android-клиента. Подготовлено техническое задание, описана реальная архитектура системы, зафиксированы особенности реализации и предложена структура системы тестирования.
+
+Главный результат состоит в том, что проект уже можно рассматривать как многокомпонентную мобильную платформу с выделенным API gateway, транзакционным backend, сервисом котировок, отдельным инфраструктурным контуром и встроенной observability-подсистемой. При этом также честно зафиксированы ограничения: Android-клиент пока находится на стадии интеграции с реальным backend, а тестовая зрелость разных модулей остаётся неоднородной.
+
+Подготовленные документация, база знаний и LaTeX-отчёт создают основу не только для сдачи по курсу, но и для дальнейшего развития проекта внутри команды.
+
+\begin{thebibliography}{99}
+
+\bibitem{lecture}
+Ключев А.\,О. Разработка мобильных приложений. Лекция 1: введение и практическое задание. Учебные материалы курса, 2026.
+
+\bibitem{cleanarch}
+Martin R.\,C. Clean Architecture: A Craftsman's Guide to Software Structure and Design. Boston: Prentice Hall, 2017.
+
+\bibitem{ktor}
+JetBrains. Ktor Documentation [Электронный ресурс]. URL: \url{https://ktor.io/docs/server-create-and-configure.html} (дата обращения: 01.04.2026).
+
+\bibitem{android}
+Android Developers. Activities and Fragments [Электронный ресурс]. URL: \url{https://developer.android.com/guide/fragments} (дата обращения: 01.04.2026).
+
+\bibitem{exposed}
+JetBrains. Exposed Documentation [Электронный ресурс]. URL: \url{https://www.jetbrains.com/help/exposed/about.html} (дата обращения: 01.04.2026).
+
+\bibitem{otel}
+OpenTelemetry. Collector and Tracing Documentation [Электронный ресурс]. URL: \url{https://opentelemetry.io/docs/collector/} (дата обращения: 01.04.2026).
+
+\bibitem{redis}
+Redis. Streams [Электронный ресурс]. URL: \url{https://redis.io/docs/latest/develop/data-types/streams/} (дата обращения: 01.04.2026).
+
+\bibitem{clickhouse}
+ClickHouse. HTTP Interface Documentation [Электронный ресурс]. URL: \url{https://clickhouse.com/docs/en/interfaces/http} (дата обращения: 01.04.2026).
+
+\bibitem{repo-docs}
+Документация проекта \texttt{stock-tracker-app}: \texttt{README.md}, \texttt{docs/system-architecture.md}, \texttt{docs/backend-implementation.md}, \texttt{docs/endpoints.md}. Репозиторий команды, состояние на 01.04.2026.
+
+\end{thebibliography}
+
+\end{document}
