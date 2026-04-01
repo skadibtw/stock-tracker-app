@@ -9,6 +9,7 @@ import (
 	"strings"
 	"time"
 
+	"go.opentelemetry.io/otel/trace"
 	"stock-tracker-app/quotes-service/internal/quotes"
 )
 
@@ -31,16 +32,20 @@ type Collector struct {
 	logger       *log.Logger
 	sourceName   string
 	pollInterval time.Duration
+	sinks        []QuoteSink
+	tracer       trace.Tracer
 }
 
 // NewCollector wires the snapshot source to the in-memory quotes store.
-func NewCollector(reader SnapshotReader, store *quotes.Store, logger *log.Logger, sourceName string, pollInterval time.Duration) *Collector {
+func NewCollector(reader SnapshotReader, store *quotes.Store, logger *log.Logger, sourceName string, pollInterval time.Duration, tracer trace.Tracer, sinks ...QuoteSink) *Collector {
 	return &Collector{
 		reader:       reader,
 		store:        store,
 		logger:       logger,
 		sourceName:   sourceName,
 		pollInterval: pollInterval,
+		sinks:        sinks,
+		tracer:       tracer,
 	}
 }
 
@@ -63,9 +68,13 @@ func (c *Collector) Run(ctx context.Context) {
 
 // collectOnce refreshes the store from a single source snapshot.
 func (c *Collector) collectOnce(ctx context.Context) {
+	ctx, span := c.tracer.Start(ctx, "quotes.collect")
+	defer span.End()
+
 	snapshot, err := c.reader.ReadSnapshot(ctx)
 	if err != nil {
 		c.store.MarkUnavailable(err.Error())
+		span.RecordError(err)
 		c.logger.Printf("quotes source unavailable: %v", err)
 		return
 	}
@@ -74,11 +83,18 @@ func (c *Collector) collectOnce(ctx context.Context) {
 	c.store.RecordParseErrors(malformed)
 	if err != nil {
 		c.store.MarkUnavailable(err.Error())
+		span.RecordError(err)
 		c.logger.Printf("quotes snapshot rejected: %v", err)
 		return
 	}
 
 	c.store.SetQuotes(items)
+	for _, sink := range c.sinks {
+		if err := sink.Store(ctx, items); err != nil {
+			span.RecordError(err)
+			c.logger.Printf("quotes sink failed: %v", err)
+		}
+	}
 }
 
 // parseSnapshot keeps valid lines and rejects an empty or fully broken snapshot.

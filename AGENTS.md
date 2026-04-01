@@ -3,7 +3,7 @@
 > Project map for AI agents. Keep this file up-to-date as the project evolves.
 
 ## Project Overview
-This repository is intended to hold the full trading and investing application platform. For the current branch, the active implementation scope is only the Kotlin backend for the mobile app and the Kotlin database-access layer; the wider system context still includes Android and cross-platform mobile clients, Go quote ingestion, a Linux quote driver in C, and shared infrastructure.
+This repository is intended to hold the full trading and investing application platform. For the current branch, the active implementation scope includes the Kotlin mobile API gateway, the Kotlin transactional backend and database-access layer, the Go quote ingestion service, containerized infrastructure, and supporting architecture documentation; the wider system context still includes Android and cross-platform mobile clients plus a Linux quote driver in C.
 
 ## Tech Stack
 - **Language:** Kotlin
@@ -27,11 +27,21 @@ This repository is intended to hold the full trading and investing application p
 ├── mobile-backend/              # Kotlin Ktor backend module for the mobile app
 │   ├── build.gradle.kts        # Module dependencies and build logic
 │   └── src/                    # Kotlin sources, resources, and tests for backend work
+├── mobile-api/                  # Kotlin Ktor API gateway for mobile clients
+│   ├── build.gradle.kts        # Module dependencies and build logic
+│   └── src/                    # Kotlin sources, resources, and tests for gateway work
+├── deploy/                      # Docker Compose and observability configs
+│   ├── otel-collector/         # OpenTelemetry Collector config
+│   ├── prometheus/             # Prometheus scrape config
+│   ├── loki/                   # Loki config
+│   ├── tempo/                  # Tempo config
+│   └── grafana/                # Grafana provisioning
 ├── docs/                        # Backend implementation and endpoint reference docs
 ├── gradle/                      # Gradle wrapper files shared by repo modules
 ├── build.gradle.kts             # Root multi-module Gradle configuration
 ├── settings.gradle.kts          # Root module includes and naming
 ├── gradle.properties            # Shared Gradle and version properties
+├── docker-compose.yml           # Local and server deployment stack
 ├── README.md                    # Minimal repository landing page
 ├── opencode.json                # Existing OpenCode configuration
 └── .mcp.json                    # Project-level MCP server configuration
@@ -46,7 +56,11 @@ This repository is intended to hold the full trading and investing application p
 | `.ai-factory/DESCRIPTION.md` | Product scope, tech stack, and non-functional requirements |
 | `.ai-factory/ARCHITECTURE.md` | Clean Architecture rules for the Kotlin backend |
 | `settings.gradle.kts` | Root Gradle module declarations |
+| `mobile-api/build.gradle.kts` | Mobile API gateway module build definition |
 | `mobile-backend/build.gradle.kts` | Kotlin Ktor backend module build definition |
+| `docker-compose.yml` | Multi-service local/server stack |
+| `deploy/otel-collector/config.yaml` | OpenTelemetry Collector pipeline config |
+| `docs/system-architecture.md` | Multi-service architecture and deployment plan |
 | `docs/endpoints.md` | API contract reference for implemented backend endpoints |
 | `.opencode/skills/trading-backend-kotlin-api/SKILL.md` | Custom project skill for Kotlin trading backend work |
 
@@ -57,6 +71,7 @@ This repository is intended to hold the full trading and investing application p
 | Architecture | `.ai-factory/ARCHITECTURE.md` | Architecture pattern and dependency rules |
 | Project Description | `.ai-factory/DESCRIPTION.md` | Project specification and stack |
 | Backend Implementation | `docs/backend-implementation.md` | Backend setup, configuration, and integration notes |
+| System Architecture | `docs/system-architecture.md` | Multi-service architecture and Docker deployment guide |
 | Endpoint Reference | `docs/endpoints.md` | Request and response contracts for current endpoints |
 | Project Map | `AGENTS.md` | Structural guide for AI agents |
 

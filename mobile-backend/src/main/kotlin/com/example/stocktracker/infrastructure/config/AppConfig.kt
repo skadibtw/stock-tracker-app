@@ -54,6 +54,7 @@ data class AppConfig(
     val logging: AppLogLevel,
     val jwt: JwtConfig,
     val observability: ObservabilityConfig,
+    val messaging: MessagingConfig,
     val marketData: MarketDataConfig,
     val database: DatabaseConfig,
     val clock: Clock = Clock.systemUTC(),
@@ -75,6 +76,12 @@ data class AppConfig(
             observability = ObservabilityConfig(
                 tracingEnabled = config.propertyOrNull("app.observability.tracingEnabled")?.getString()?.toBooleanStrictOrNull() ?: true,
                 serviceName = config.propertyOrNull("app.observability.serviceName")?.getString().orEmpty().ifBlank { "mobile-backend" },
+                otlpEndpoint = config.propertyOrNull("app.observability.otlpEndpoint")?.getString()?.ifBlank { null },
+            ),
+            messaging = MessagingConfig(
+                enabled = config.propertyOrNull("app.messaging.enabled")?.getString()?.toBooleanStrictOrNull() ?: true,
+                redisUrl = config.propertyOrNull("app.messaging.redisUrl")?.getString()?.ifBlank { null },
+                streamPrefix = config.propertyOrNull("app.messaging.streamPrefix")?.getString().orEmpty().ifBlank { "stocktracker" },
             ),
             marketData = MarketDataConfig(
                 baseUrl = config.propertyOrNull("app.marketData.baseUrl")?.getString()?.ifBlank { null },

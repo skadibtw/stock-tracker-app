@@ -13,8 +13,10 @@ import com.example.stocktracker.infrastructure.db.repositories.ExposedPortfolioR
 import com.example.stocktracker.infrastructure.db.repositories.ExposedTradeHistoryRepository
 import com.example.stocktracker.infrastructure.db.repositories.ExposedUserRepository
 import com.example.stocktracker.infrastructure.db.transactions.DatabaseFactory
-import com.example.stocktracker.infrastructure.logging.LoggingTelemetryRecorder
+import com.example.stocktracker.infrastructure.events.RedisStreamEventPublisher
 import com.example.stocktracker.infrastructure.market.HttpMarketQuoteGateway
+import com.example.stocktracker.infrastructure.observability.OpenTelemetryFactory
+import com.example.stocktracker.infrastructure.observability.OpenTelemetryTelemetryRecorder
 import com.example.stocktracker.infrastructure.security.BcryptPasswordHasher
 import com.example.stocktracker.infrastructure.security.JwtTokenIssuer
 import com.example.stocktracker.presentation.plugins.configureAuthentication
@@ -23,8 +25,10 @@ import com.example.stocktracker.presentation.plugins.configureCallLogging
 import com.example.stocktracker.presentation.plugins.configureContentNegotiation
 import com.example.stocktracker.presentation.plugins.configureRouting
 import com.example.stocktracker.presentation.plugins.configureStatusPages
+import com.example.stocktracker.presentation.plugins.configureTracing
 import io.github.oshai.kotlinlogging.KotlinLogging
 import io.ktor.server.application.Application
+import io.ktor.server.application.ApplicationStopped
 
 private val logger = KotlinLogging.logger {}
 
@@ -39,11 +43,16 @@ fun Application.module() {
     }
 
     DatabaseFactory.initialize(appConfig.database)
+    val openTelemetryHandle = OpenTelemetryFactory.create(
+        config = appConfig.observability,
+        environment = appConfig.environment,
+    )
 
     val healthCheckUseCase = HealthCheckUseCase(
         serviceName = appConfig.serviceName,
         environment = appConfig.environment,
         clock = appConfig.clock,
+        databaseHealthCheck = DatabaseFactory::isHealthy,
     )
 
     val userRepository = ExposedUserRepository()
@@ -52,17 +61,25 @@ fun Application.module() {
     val marketQuoteGateway = HttpMarketQuoteGateway(appConfig.marketData)
     val passwordHasher = BcryptPasswordHasher()
     val tokenIssuer = JwtTokenIssuer(appConfig.jwt, appConfig.clock)
-    val telemetryRecorder = LoggingTelemetryRecorder()
+    val telemetryRecorder = OpenTelemetryTelemetryRecorder(openTelemetryHandle.tracer)
+    val eventPublisher = RedisStreamEventPublisher.from(appConfig.messaging)
+    environment.monitor.subscribe(ApplicationStopped) {
+        openTelemetryHandle.closeable?.close()
+        (eventPublisher as? AutoCloseable)?.close()
+    }
     val registerUserUseCase = RegisterUserUseCase(
         userRepository = userRepository,
         portfolioRepository = portfolioRepository,
         passwordHasher = passwordHasher,
         tokenIssuer = tokenIssuer,
+        eventPublisher = eventPublisher,
+        telemetryRecorder = telemetryRecorder,
     )
     val loginUserUseCase = LoginUserUseCase(
         userRepository = userRepository,
         passwordHasher = passwordHasher,
         tokenIssuer = tokenIssuer,
+        telemetryRecorder = telemetryRecorder,
     )
     val getStockHoldingDetailsUseCase = GetStockHoldingDetailsUseCase(
         portfolioRepository = portfolioRepository,
@@ -71,11 +88,15 @@ fun Application.module() {
         portfolioRepository = portfolioRepository,
         tradeHistoryRepository = tradeHistoryRepository,
         clock = appConfig.clock,
+        eventPublisher = eventPublisher,
+        telemetryRecorder = telemetryRecorder,
     )
     val sellStockUseCase = SellStockUseCase(
         portfolioRepository = portfolioRepository,
         tradeHistoryRepository = tradeHistoryRepository,
         clock = appConfig.clock,
+        eventPublisher = eventPublisher,
+        telemetryRecorder = telemetryRecorder,
     )
     val getPortfolioStatisticsUseCase = GetPortfolioStatisticsUseCase(
         portfolioRepository = portfolioRepository,
@@ -89,6 +110,7 @@ fun Application.module() {
     configureCallLogging(appConfig)
     configureAuthentication(appConfig)
     configureContentNegotiation()
+    configureTracing(openTelemetryHandle.tracer)
     configureStatusPages()
     configureRouting(
         healthCheckUseCase = healthCheckUseCase,

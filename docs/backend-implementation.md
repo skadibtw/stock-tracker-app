@@ -1,13 +1,15 @@
 # Backend Implementation
 
 ## Scope
-This branch implements the Kotlin mobile backend and Kotlin database-access layer in `mobile-backend/`.
+This branch implements the Kotlin mobile API gateway in `mobile-api/`, the Kotlin transactional backend and database-access layer in `mobile-backend/`, and the Docker-based deployment baseline for the backend stack.
 
 ## Stack
 - Kotlin
 - Ktor
 - Exposed
 - PostgreSQL
+- Redis Streams
+- OpenTelemetry OTLP
 - BCrypt for password hashing
 - JWT for access tokens
 - Logback + kotlin-logging for structured runtime logs
@@ -65,6 +67,8 @@ Log levels:
 - Public quotes are read through `QUOTES_SERVICE_BASE_URL`, which points at the Go service that polls `/dev/quotes` from the Linux driver.
 - JWT carries `portfolioId`, which keeps current protected portfolio routes integration-ready.
 - The backend now exposes `GET /market/quotes/{symbol}` as the first Kotlin-side integration point for the Go plus C quote pipeline.
+- `portfolio-service` publishes `user.registered` and `trade.executed` events into Redis Streams.
+- OpenTelemetry traces are exported through `OTEL_EXPORTER_OTLP_ENDPOINT`.
 
 ## Verification
 Current verification commands:

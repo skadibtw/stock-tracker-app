@@ -7,6 +7,8 @@ import com.example.stocktracker.domain.common.StockSymbol
 import com.example.stocktracker.infrastructure.config.MarketDataConfig
 import com.example.stocktracker.presentation.http.errors.ServiceUnavailableException
 import io.github.oshai.kotlinlogging.KotlinLogging
+import io.opentelemetry.api.GlobalOpenTelemetry
+import io.opentelemetry.context.Context
 import java.math.BigDecimal
 import java.math.RoundingMode
 import java.net.ConnectException
@@ -40,11 +42,16 @@ class HttpMarketQuoteGateway(
     override suspend fun getLatestQuote(symbol: StockSymbol): MarketQuoteSnapshot? {
         val baseUrl = config.baseUrl
             ?: throw ServiceUnavailableException("Market quotes service is not configured")
-        val request = HttpRequest.newBuilder()
+        val requestBuilder = HttpRequest.newBuilder()
             .uri(URI.create("${baseUrl.trimEnd('/')}/quotes/${symbol.value}"))
             .timeout(Duration.ofMillis(config.timeoutMs))
             .GET()
-            .build()
+        GlobalOpenTelemetry.getPropagators().textMapPropagator.inject(
+            Context.current(),
+            requestBuilder,
+            requestBuilderSetter,
+        )
+        val request = requestBuilder.build()
 
         val response = try {
             httpClient.send(request, HttpResponse.BodyHandlers.ofString())
@@ -81,4 +88,8 @@ class HttpMarketQuoteGateway(
             source = payload.sourceName,
         )
     }
+}
+
+private val requestBuilderSetter = io.opentelemetry.context.propagation.TextMapSetter<HttpRequest.Builder> { carrier, key, value ->
+    carrier?.header(key, value)
 }

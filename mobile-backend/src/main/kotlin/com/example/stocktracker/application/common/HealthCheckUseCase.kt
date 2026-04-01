@@ -8,11 +8,12 @@ class HealthCheckUseCase(
     private val serviceName: String,
     private val environment: String,
     private val clock: Clock,
+    private val databaseHealthCheck: () -> Boolean,
 ) {
     fun execute(): ServiceStatus = ServiceStatus(
         name = serviceName,
         environment = environment,
-        status = "UP",
+        status = if (databaseHealthCheck()) "UP" else "DOWN",
         checkedAt = Instant.now(clock),
     )
 }

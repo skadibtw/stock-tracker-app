@@ -21,7 +21,7 @@ fun Route.healthRoutes(healthCheckUseCase: HealthCheckUseCase) {
         get {
             val status = healthCheckUseCase.execute()
             call.respond(
-                HttpStatusCode.OK,
+                if (status.status == "UP") HttpStatusCode.OK else HttpStatusCode.ServiceUnavailable,
                 HealthResponse(
                     service = status.name,
                     environment = status.environment,

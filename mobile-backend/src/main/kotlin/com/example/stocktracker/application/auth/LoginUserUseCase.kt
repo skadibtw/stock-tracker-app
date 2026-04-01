@@ -1,9 +1,11 @@
 package com.example.stocktracker.application.auth
 
 import com.example.stocktracker.application.ports.PasswordHasher
+import com.example.stocktracker.application.ports.TelemetryRecorder
 import com.example.stocktracker.application.ports.TokenIssuer
 import com.example.stocktracker.application.ports.UserRepository
 import com.example.stocktracker.domain.auth.UserLogin
+import com.example.stocktracker.infrastructure.logging.LoggingTelemetryRecorder
 import io.github.oshai.kotlinlogging.KotlinLogging
 
 private val logger = KotlinLogging.logger {}
@@ -17,6 +19,7 @@ class LoginUserUseCase(
     private val userRepository: UserRepository,
     private val passwordHasher: PasswordHasher,
     private val tokenIssuer: TokenIssuer,
+    private val telemetryRecorder: TelemetryRecorder = LoggingTelemetryRecorder(),
 ) {
     suspend fun execute(command: LoginUserCommand): AuthResult {
         logger.debug { "[LoginUserUseCase.execute] Login command received {login=${command.login}}" }
@@ -37,6 +40,13 @@ class LoginUserUseCase(
         }
 
         val accessToken = tokenIssuer.issueAccessToken(user)
+        telemetryRecorder.record(
+            event = "user.logged_in",
+            attributes = mapOf(
+                "user.id" to user.id.value.toString(),
+                "portfolio.id" to user.portfolioId.value.toString(),
+            ),
+        )
         logger.info { "[LoginUserUseCase.execute] Login completed {userId=${user.id.value}, login=${user.login.value}}" }
         return AuthResult(user, accessToken)
     }

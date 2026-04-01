@@ -22,7 +22,7 @@ func TestQuotesEndpointReturnsItems(t *testing.T) {
 	req := httptest.NewRequest(http.MethodGet, "/quotes", nil)
 	rec := httptest.NewRecorder()
 
-	NewHTTPHandler(store).ServeHTTP(rec, req)
+	NewHTTPHandler(store, nil).ServeHTTP(rec, req)
 
 	if rec.Code != http.StatusOK {
 		t.Fatalf("unexpected status: %d", rec.Code)
@@ -49,7 +49,7 @@ func TestQuotesEndpointSupportsTickerFilter(t *testing.T) {
 	req := httptest.NewRequest(http.MethodGet, "/quotes?tickers=SBER", nil)
 	rec := httptest.NewRecorder()
 
-	NewHTTPHandler(store).ServeHTTP(rec, req)
+	NewHTTPHandler(store, nil).ServeHTTP(rec, req)
 
 	if rec.Code != http.StatusOK {
 		t.Fatalf("unexpected status: %d", rec.Code)
@@ -73,7 +73,7 @@ func TestQuotesEndpointReturns503WhenSourceIsUnavailable(t *testing.T) {
 	req := httptest.NewRequest(http.MethodGet, "/quotes", nil)
 	rec := httptest.NewRecorder()
 
-	NewHTTPHandler(store).ServeHTTP(rec, req)
+	NewHTTPHandler(store, nil).ServeHTTP(rec, req)
 
 	if rec.Code != http.StatusServiceUnavailable {
 		t.Fatalf("unexpected status: %d", rec.Code)
@@ -91,7 +91,7 @@ func TestQuoteByTickerReturns404(t *testing.T) {
 	req := httptest.NewRequest(http.MethodGet, "/quotes/SBER", nil)
 	rec := httptest.NewRecorder()
 
-	NewHTTPHandler(store).ServeHTTP(rec, req)
+	NewHTTPHandler(store, nil).ServeHTTP(rec, req)
 
 	if rec.Code != http.StatusNotFound {
 		t.Fatalf("unexpected status: %d", rec.Code)
@@ -112,7 +112,7 @@ func TestQuoteHistoryEndpointReturnsHistory(t *testing.T) {
 	req := httptest.NewRequest(http.MethodGet, "/quotes/GAZP/history?limit=1", nil)
 	rec := httptest.NewRecorder()
 
-	NewHTTPHandler(store).ServeHTTP(rec, req)
+	NewHTTPHandler(store, nil).ServeHTTP(rec, req)
 
 	if rec.Code != http.StatusOK {
 		t.Fatalf("unexpected status: %d", rec.Code)
@@ -139,7 +139,7 @@ func TestMetricsEndpointReturnsCounters(t *testing.T) {
 	req := httptest.NewRequest(http.MethodGet, "/metrics", nil)
 	rec := httptest.NewRecorder()
 
-	NewHTTPHandler(store).ServeHTTP(rec, req)
+	NewHTTPHandler(store, nil).ServeHTTP(rec, req)
 
 	if rec.Code != http.StatusOK {
 		t.Fatalf("unexpected status: %d", rec.Code)

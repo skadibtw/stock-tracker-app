@@ -11,7 +11,7 @@ import (
 )
 
 // NewHTTPHandler exposes the MVP read-only quotes API.
-func NewHTTPHandler(store *quotes.Store) http.Handler {
+func NewHTTPHandler(store *quotes.Store, historyProvider HistoryProvider, dependencies ...QuoteSink) http.Handler {
 	mux := http.NewServeMux()
 
 	mux.HandleFunc("/health", func(w http.ResponseWriter, r *http.Request) {
@@ -20,7 +20,14 @@ func NewHTTPHandler(store *quotes.Store) http.Handler {
 			return
 		}
 
-		writeJSON(w, http.StatusOK, store.Health())
+		health := store.Health()
+		if len(dependencies) > 0 {
+			health.Dependencies = make([]quotes.DependencyStatus, 0, len(dependencies))
+			for _, dependency := range dependencies {
+				health.Dependencies = append(health.Dependencies, dependency.DependencyStatus())
+			}
+		}
+		writeJSON(w, http.StatusOK, health)
 	})
 
 	mux.HandleFunc("/metrics", func(w http.ResponseWriter, r *http.Request) {
@@ -74,6 +81,14 @@ func NewHTTPHandler(store *quotes.Store) http.Handler {
 			}
 
 			items, found, available := store.GetHistory(ticker, limit)
+			if historyProvider != nil {
+				historyItems, err := historyProvider.History(r.Context(), ticker, limit)
+				if err == nil && len(historyItems) > 0 {
+					items = historyItems
+					found = true
+					available = true
+				}
+			}
 			if !available {
 				writeJSON(w, http.StatusServiceUnavailable, map[string]string{"error": "quotes source unavailable"})
 				return

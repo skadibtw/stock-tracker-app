@@ -1,0 +1,7 @@
+services:
+  quotes-service:
+    environment:
+      QUOTES_SOURCE: /dev/quotes
+      SOURCE_NAME: linux-driver
+    devices:
+      - "/dev/quotes:/dev/quotes"

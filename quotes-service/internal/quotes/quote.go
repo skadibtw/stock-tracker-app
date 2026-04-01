@@ -7,6 +7,12 @@ type Quote struct {
 	Source    string  `json:"source"`
 }
 
+type DependencyStatus struct {
+	Name      string `json:"name"`
+	Status    string `json:"status"`
+	LastError string `json:"last_error,omitempty"`
+}
+
 type HealthStatus struct {
 	Status             string `json:"status"`
 	ServiceStatus      string `json:"service_status"`
@@ -16,6 +22,7 @@ type HealthStatus struct {
 	TrackedTickers     int    `json:"tracked_tickers"`
 	TotalRefreshes     uint64 `json:"total_refreshes"`
 	TotalParseErrors   uint64 `json:"total_parse_errors"`
+	Dependencies       []DependencyStatus `json:"dependencies,omitempty"`
 }
 
 type Metrics struct {

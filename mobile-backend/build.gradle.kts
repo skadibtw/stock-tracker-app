@@ -40,6 +40,10 @@ dependencies {
     implementation("org.postgresql:postgresql:42.7.5")
     implementation("org.mindrot:jbcrypt:0.4")
     implementation("ch.qos.logback:logback-classic:1.5.18")
+    implementation("redis.clients:jedis:5.2.0")
+    implementation("io.opentelemetry:opentelemetry-api:1.47.0")
+    implementation("io.opentelemetry:opentelemetry-sdk:1.47.0")
+    implementation("io.opentelemetry:opentelemetry-exporter-otlp:1.47.0")
 
     testImplementation(kotlin("test"))
     testImplementation("io.ktor:ktor-server-test-host-jvm:3.1.3")

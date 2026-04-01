@@ -1,0 +1,12 @@
+[Unit]
+Description=Stock Tracker Quotes Driver
+After=network.target
+
+[Service]
+Type=oneshot
+RemainAfterExit=yes
+ExecStart=/bin/sh -lc 'cd /opt/stock-tracker-app/driver && make && (/usr/sbin/lsmod | grep -q "^quotes_driver" || /usr/sbin/insmod quotes_driver.ko)'
+ExecStop=/bin/sh -lc '/usr/sbin/lsmod | grep -q "^quotes_driver" && /usr/sbin/rmmod quotes_driver || true'
+
+[Install]
+WantedBy=multi-user.target

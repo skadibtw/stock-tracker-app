@@ -16,11 +16,14 @@ import javax.sql.DataSource
 private val logger = KotlinLogging.logger {}
 
 object DatabaseFactory {
+    private var dataSource: DataSource? = null
+
     fun initialize(config: DatabaseConfig): DataSource? {
         if (config.jdbcUrl.isNullOrBlank()) {
             logger.warn {
                 "[DatabaseFactory.initialize] Skipping database initialization because jdbcUrl is not configured"
             }
+            dataSource = null
             return null
         }
 
@@ -37,8 +40,9 @@ object DatabaseFactory {
             validationTimeout = config.validationTimeoutMs
         }
 
-        val dataSource = HikariDataSource(hikariConfig)
-        Database.connect(dataSource)
+        val hikariDataSource = HikariDataSource(hikariConfig)
+        Database.connect(hikariDataSource)
+        dataSource = hikariDataSource
 
         transaction {
             logger.info { "[DatabaseFactory.initialize] Ensuring database schema exists" }
@@ -46,6 +50,19 @@ object DatabaseFactory {
         }
 
         logger.info { "[DatabaseFactory.initialize] Database initialization completed" }
-        return dataSource
+        return hikariDataSource
+    }
+
+    fun isHealthy(): Boolean {
+        val currentDataSource = dataSource ?: return false
+
+        return runCatching {
+            currentDataSource.connection.use { connection ->
+                connection.isValid(2)
+            }
+        }.getOrElse { exception ->
+            logger.warn(exception) { "[DatabaseFactory.isHealthy] Database health check failed" }
+            false
+        }
     }
 }

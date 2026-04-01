@@ -1,5 +1,4 @@
 #include <linux/cdev.h>
-#include <linux/class.h>
 #include <linux/device.h>
 #include <linux/fs.h>
 #include <linux/init.h>
@@ -90,7 +89,7 @@ static void update_quote_prices(struct timer_list *unused)
 		long next_price;
 
 		if (max_delta_cents > 0)
-			delta = (int)prandom_u32_max((max_delta_cents * 2) + 1) - (int)max_delta_cents;
+			delta = (int)get_random_u32_below((max_delta_cents * 2) + 1) - (int)max_delta_cents;
 		next_price = quotes[i].price_cents + delta;
 
 		if (next_price < MIN_PRICE_CENTS)
