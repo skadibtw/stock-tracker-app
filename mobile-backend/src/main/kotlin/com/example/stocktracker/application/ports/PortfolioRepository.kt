@@ -1,6 +1,7 @@
 package com.example.stocktracker.application.ports
 
 import com.example.stocktracker.domain.auth.UserId
+import com.example.stocktracker.domain.common.Money
 import com.example.stocktracker.domain.common.StockSymbol
 import com.example.stocktracker.domain.common.ShareQuantity
 import com.example.stocktracker.domain.portfolio.HoldingLot
@@ -15,4 +16,5 @@ interface PortfolioRepository {
     suspend fun findHoldingLots(portfolioId: PortfolioId, symbol: StockSymbol): List<HoldingLot>
     suspend fun addHoldingLot(portfolioId: PortfolioId, lot: HoldingLot): HoldingLot
     suspend fun consumeHoldingLots(portfolioId: PortfolioId, symbol: StockSymbol, quantity: ShareQuantity): List<HoldingLot>
+    suspend fun updateCashBalance(portfolioId: PortfolioId, balance: Money): Money
 }

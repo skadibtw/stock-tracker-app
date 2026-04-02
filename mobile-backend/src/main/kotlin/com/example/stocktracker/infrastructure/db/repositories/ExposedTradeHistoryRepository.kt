@@ -61,15 +61,15 @@ class ExposedTradeHistoryRepository : TradeHistoryRepository {
             portfolioId = portfolioId,
             totalBuys = buyRecords.size,
             totalSells = sellRecords.size,
-            grossBuyVolume = Money(
+            grossBuyVolume = Money.from(
                 amount = buyRecords.fold(BigDecimal.ZERO) { total, record ->
-                    total + (record.pricePerShare.amount * record.quantity.value)
+                    total + record.pricePerShare.amount.multiply(record.quantity.value)
                 },
                 currency = currency,
             ),
-            grossSellVolume = Money(
+            grossSellVolume = Money.from(
                 amount = sellRecords.fold(BigDecimal.ZERO) { total, record ->
-                    total + (record.pricePerShare.amount * record.quantity.value)
+                    total + record.pricePerShare.amount.multiply(record.quantity.value)
                 },
                 currency = currency,
             ),

@@ -86,7 +86,7 @@ Response `200 OK`:
 ```
 
 ### `POST /portfolio/stocks/buy`
-Appends a buy transaction and creates a new holding lot.
+Appends a buy transaction and creates a new holding lot. Returns `400` when the cash balance is insufficient.
 
 Request body:
 ```json
@@ -152,6 +152,27 @@ Response `200 OK`:
   "grossBuyVolume": "150.00",
   "grossSellVolume": "100.00",
   "netCashFlow": "-50.00",
+  "cashBalance": "950.00",
+  "currency": "USD"
+}
+```
+
+### `POST /portfolio/balance/top-up`
+Credits cash to the authenticated portfolio.
+
+Request body:
+```json
+{
+  "amount": "1000.00",
+  "currency": "USD"
+}
+```
+
+Response `200 OK`:
+```json
+{
+  "portfolioId": "uuid",
+  "cashBalance": "1000.00",
   "currency": "USD"
 }
 ```

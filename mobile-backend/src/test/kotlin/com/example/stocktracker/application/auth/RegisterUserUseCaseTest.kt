@@ -7,6 +7,7 @@ import com.example.stocktracker.application.ports.UserRepository
 import com.example.stocktracker.domain.auth.User
 import com.example.stocktracker.domain.auth.UserId
 import com.example.stocktracker.domain.auth.UserLogin
+import com.example.stocktracker.domain.common.Money
 import com.example.stocktracker.domain.common.StockSymbol
 import com.example.stocktracker.domain.portfolio.HoldingLot
 import com.example.stocktracker.domain.portfolio.Portfolio
@@ -68,5 +69,6 @@ class RegisterUserUseCaseTest {
         override suspend fun findHoldingLots(portfolioId: PortfolioId, symbol: StockSymbol): List<HoldingLot> = emptyList()
         override suspend fun addHoldingLot(portfolioId: PortfolioId, lot: HoldingLot): HoldingLot = lot
         override suspend fun consumeHoldingLots(portfolioId: PortfolioId, symbol: StockSymbol, quantity: ShareQuantity): List<HoldingLot> = emptyList()
+        override suspend fun updateCashBalance(portfolioId: PortfolioId, balance: Money): Money = balance
     }
 }

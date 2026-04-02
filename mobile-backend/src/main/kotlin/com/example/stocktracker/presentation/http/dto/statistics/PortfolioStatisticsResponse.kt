@@ -12,6 +12,7 @@ data class PortfolioStatisticsResponse(
     val grossBuyVolume: String,
     val grossSellVolume: String,
     val netCashFlow: String,
+    val cashBalance: String,
     val currency: String,
 )
 
@@ -23,5 +24,6 @@ fun PortfolioStatisticsView.toResponse(): PortfolioStatisticsResponse = Portfoli
     grossBuyVolume = grossBuyVolume,
     grossSellVolume = grossSellVolume,
     netCashFlow = netCashFlow,
+    cashBalance = cashBalance,
     currency = currency,
 )

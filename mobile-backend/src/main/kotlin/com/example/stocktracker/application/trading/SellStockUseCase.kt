@@ -45,8 +45,11 @@ class SellStockUseCase(
         val symbol = StockSymbol(command.symbol.uppercase())
         val quantity = ShareQuantity(command.quantity)
         val price = Money(command.pricePerShare, command.currency).normalized()
+        val totalProceeds = price.multiply(quantity.value)
 
         portfolioRepository.consumeHoldingLots(portfolio.id, symbol, quantity)
+        require(portfolio.cashBalance.currency == totalProceeds.currency) { "Balance currency mismatch" }
+        portfolioRepository.updateCashBalance(portfolio.id, portfolio.cashBalance + totalProceeds)
 
         val tradeRecord = TradeRecord(
             id = TransactionId(UUID.randomUUID()),
@@ -68,6 +71,7 @@ class SellStockUseCase(
                 "symbol" to tradeRecord.symbol.value,
                 "quantity" to tradeRecord.quantity.value.toPlainString(),
                 "pricePerShare" to tradeRecord.pricePerShare.amount.toPlainString(),
+                "totalAmount" to totalProceeds.amount.toPlainString(),
                 "currency" to tradeRecord.pricePerShare.currency,
                 "executedAt" to tradeRecord.executedAt.toString(),
             ),

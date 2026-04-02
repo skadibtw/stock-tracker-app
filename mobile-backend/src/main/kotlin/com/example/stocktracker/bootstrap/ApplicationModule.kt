@@ -5,6 +5,7 @@ import com.example.stocktracker.application.auth.RegisterUserUseCase
 import com.example.stocktracker.application.common.HealthCheckUseCase
 import com.example.stocktracker.application.market.GetMarketQuoteUseCase
 import com.example.stocktracker.application.portfolio.GetStockHoldingDetailsUseCase
+import com.example.stocktracker.application.portfolio.TopUpPortfolioBalanceUseCase
 import com.example.stocktracker.application.statistics.GetPortfolioStatisticsUseCase
 import com.example.stocktracker.application.trading.BuyStockUseCase
 import com.example.stocktracker.application.trading.SellStockUseCase
@@ -98,6 +99,11 @@ fun Application.module() {
         eventPublisher = eventPublisher,
         telemetryRecorder = telemetryRecorder,
     )
+    val topUpPortfolioBalanceUseCase = TopUpPortfolioBalanceUseCase(
+        portfolioRepository = portfolioRepository,
+        eventPublisher = eventPublisher,
+        telemetryRecorder = telemetryRecorder,
+    )
     val getPortfolioStatisticsUseCase = GetPortfolioStatisticsUseCase(
         portfolioRepository = portfolioRepository,
         tradeHistoryRepository = tradeHistoryRepository,
@@ -121,6 +127,7 @@ fun Application.module() {
         getMarketQuoteUseCase = getMarketQuoteUseCase,
         buyStockUseCase = buyStockUseCase,
         sellStockUseCase = sellStockUseCase,
+        topUpPortfolioBalanceUseCase = topUpPortfolioBalanceUseCase,
     )
 
     telemetryRecorder.record(

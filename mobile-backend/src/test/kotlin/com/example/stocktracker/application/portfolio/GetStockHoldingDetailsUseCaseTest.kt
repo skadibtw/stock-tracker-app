@@ -23,7 +23,11 @@ class GetStockHoldingDetailsUseCaseTest {
             HoldingLot(StockSymbol("AAPL"), ShareQuantity(BigDecimal("1.5")), Money(BigDecimal("100.00"), "USD"), Instant.parse("2026-03-01T10:00:00Z")),
             HoldingLot(StockSymbol("AAPL"), ShareQuantity(BigDecimal("2.0")), Money(BigDecimal("120.00"), "USD"), Instant.parse("2026-03-02T10:00:00Z")),
         )
-        val useCase = GetStockHoldingDetailsUseCase(FakePortfolioRepository(Portfolio(portfolioId, userId, lots)))
+        val useCase = GetStockHoldingDetailsUseCase(
+            FakePortfolioRepository(
+                Portfolio(portfolioId, userId, Money(BigDecimal("0.00"), "USD"), lots),
+            ),
+        )
 
         val result = kotlinx.coroutines.runBlocking {
             useCase.execute(portfolioId, StockSymbol("AAPL"))
@@ -41,5 +45,6 @@ class GetStockHoldingDetailsUseCaseTest {
         override suspend fun findHoldingLots(portfolioId: PortfolioId, symbol: StockSymbol): List<HoldingLot> = portfolio.holdings.filter { it.symbol == symbol }
         override suspend fun addHoldingLot(portfolioId: PortfolioId, lot: HoldingLot): HoldingLot = lot
         override suspend fun consumeHoldingLots(portfolioId: PortfolioId, symbol: StockSymbol, quantity: ShareQuantity): List<HoldingLot> = emptyList()
+        override suspend fun updateCashBalance(portfolioId: PortfolioId, balance: Money): Money = balance
     }
 }

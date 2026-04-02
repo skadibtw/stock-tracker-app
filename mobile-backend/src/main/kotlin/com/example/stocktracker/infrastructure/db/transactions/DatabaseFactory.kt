@@ -46,7 +46,7 @@ object DatabaseFactory {
 
         transaction {
             logger.info { "[DatabaseFactory.initialize] Ensuring database schema exists" }
-            SchemaUtils.create(PortfoliosTable, UsersTable, HoldingLotsTable, TradeTransactionsTable)
+            SchemaUtils.createMissingTablesAndColumns(PortfoliosTable, UsersTable, HoldingLotsTable, TradeTransactionsTable)
         }
 
         logger.info { "[DatabaseFactory.initialize] Database initialization completed" }

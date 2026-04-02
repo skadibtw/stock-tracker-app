@@ -6,7 +6,6 @@ import com.example.stocktracker.domain.portfolio.PortfolioId
 import com.example.stocktracker.domain.statistics.PortfolioTransactionStatistics
 import com.example.stocktracker.presentation.http.errors.NotFoundException
 import io.github.oshai.kotlinlogging.KotlinLogging
-import java.math.BigDecimal
 
 private val logger = KotlinLogging.logger {}
 
@@ -18,6 +17,7 @@ data class PortfolioStatisticsView(
     val grossBuyVolume: String,
     val grossSellVolume: String,
     val netCashFlow: String,
+    val cashBalance: String,
     val currency: String,
 )
 
@@ -30,22 +30,26 @@ class GetPortfolioStatisticsUseCase(
         val portfolio = portfolioRepository.findById(portfolioId)
             ?: throw NotFoundException("Portfolio was not found")
         val stats = tradeHistoryRepository.summarize(portfolio.id)
-        val netCashFlow = stats.grossSellVolume.amount.subtract(stats.grossBuyVolume.amount)
+        val netCashFlow = stats.grossSellVolume - stats.grossBuyVolume
 
         logger.info {
             "[GetPortfolioStatisticsUseCase.execute] Portfolio statistics loaded {portfolioId=${portfolio.id.value}, totalBuys=${stats.totalBuys}, totalSells=${stats.totalSells}}"
         }
-        return stats.toView(netCashFlow)
+        return stats.toView(netCashFlow, portfolio.cashBalance)
     }
 
-    private fun PortfolioTransactionStatistics.toView(netCashFlow: BigDecimal): PortfolioStatisticsView = PortfolioStatisticsView(
+    private fun PortfolioTransactionStatistics.toView(
+        netCashFlow: com.example.stocktracker.domain.common.Money,
+        cashBalance: com.example.stocktracker.domain.common.Money,
+    ): PortfolioStatisticsView = PortfolioStatisticsView(
         portfolioId = portfolioId,
         totalBuys = totalBuys,
         totalSells = totalSells,
         totalTransactions = totalBuys + totalSells,
         grossBuyVolume = grossBuyVolume.amount.toPlainString(),
         grossSellVolume = grossSellVolume.amount.toPlainString(),
-        netCashFlow = netCashFlow.toPlainString(),
+        netCashFlow = netCashFlow.amount.toPlainString(),
+        cashBalance = cashBalance.amount.toPlainString(),
         currency = grossBuyVolume.currency,
     )
 }

@@ -4,6 +4,7 @@ import com.example.stocktracker.application.common.HealthCheckUseCase
 import com.example.stocktracker.application.auth.LoginUserUseCase
 import com.example.stocktracker.application.market.GetMarketQuoteUseCase
 import com.example.stocktracker.application.portfolio.GetStockHoldingDetailsUseCase
+import com.example.stocktracker.application.portfolio.TopUpPortfolioBalanceUseCase
 import com.example.stocktracker.application.auth.RegisterUserUseCase
 import com.example.stocktracker.application.statistics.GetPortfolioStatisticsUseCase
 import com.example.stocktracker.application.trading.BuyStockUseCase
@@ -29,6 +30,7 @@ fun Application.configureRouting(
     getMarketQuoteUseCase: GetMarketQuoteUseCase,
     buyStockUseCase: BuyStockUseCase,
     sellStockUseCase: SellStockUseCase,
+    topUpPortfolioBalanceUseCase: TopUpPortfolioBalanceUseCase,
 ) {
     logger.info { "[Application.configureRouting] Registering route groups {groupCount=6}" }
 
@@ -37,7 +39,7 @@ fun Application.configureRouting(
         authRoutes(registerUserUseCase, loginUserUseCase)
         marketRoutes(getMarketQuoteUseCase)
         portfolioRoutes(getStockHoldingDetailsUseCase)
-        tradingRoutes(buyStockUseCase, sellStockUseCase)
+        tradingRoutes(buyStockUseCase, sellStockUseCase, topUpPortfolioBalanceUseCase)
         statisticsRoutes(getPortfolioStatisticsUseCase)
     }
 }

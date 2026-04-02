@@ -32,6 +32,8 @@ class ExposedPortfolioRepository : PortfolioRepository {
         logger.debug { "[ExposedPortfolioRepository.create] Persisting portfolio {portfolioId=${portfolio.id.value}, userId=${portfolio.userId.value}}" }
         PortfoliosTable.insert {
             it[id] = portfolio.id.value
+            it[cashBalanceAmount] = portfolio.cashBalance.amount
+            it[cashBalanceCurrency] = portfolio.cashBalance.currency
         }
         portfolio
     }
@@ -46,6 +48,7 @@ class ExposedPortfolioRepository : PortfolioRepository {
         Portfolio(
             id = portfolioId,
             userId = UserId(userRow[UsersTable.id].value),
+            cashBalance = loadCashBalance(portfolioId),
             holdings = holdings,
         )
     }
@@ -61,6 +64,7 @@ class ExposedPortfolioRepository : PortfolioRepository {
         Portfolio(
             id = portfolioId,
             userId = userId,
+            cashBalance = loadCashBalance(portfolioId),
             holdings = holdings,
         )
     }
@@ -140,9 +144,30 @@ class ExposedPortfolioRepository : PortfolioRepository {
         consumedLots
     }
 
+    override suspend fun updateCashBalance(portfolioId: PortfolioId, balance: Money): Money = dbQuery {
+        logger.debug {
+            "[ExposedPortfolioRepository.updateCashBalance] Updating cash balance {portfolioId=${portfolioId.value}, amount=${balance.amount}, currency=${balance.currency}}"
+        }
+        PortfoliosTable.update({ PortfoliosTable.id eq portfolioId.value }) {
+            it[cashBalanceAmount] = balance.amount
+            it[cashBalanceCurrency] = balance.currency
+        }
+        balance
+    }
+
     private fun findHoldingLotsInternal(portfolioId: PortfolioId): List<HoldingLot> = HoldingLotsTable.selectAll()
         .where { HoldingLotsTable.portfolioId eq portfolioId.value }
         .map { it.toHoldingLot() }
+
+    private fun loadCashBalance(portfolioId: PortfolioId): Money = PortfoliosTable.selectAll()
+        .where { PortfoliosTable.id eq portfolioId.value }
+        .single()
+        .let { row ->
+            Money(
+                amount = row[PortfoliosTable.cashBalanceAmount],
+                currency = row[PortfoliosTable.cashBalanceCurrency],
+            )
+        }
 
     private fun ResultRow.toHoldingLot(): HoldingLot = HoldingLot(
         symbol = StockSymbol(this[HoldingLotsTable.symbol]),

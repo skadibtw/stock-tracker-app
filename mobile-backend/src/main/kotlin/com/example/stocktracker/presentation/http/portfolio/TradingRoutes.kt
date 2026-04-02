@@ -1,10 +1,14 @@
 package com.example.stocktracker.presentation.http.portfolio
 
+import com.example.stocktracker.application.portfolio.TopUpPortfolioBalanceCommand
+import com.example.stocktracker.application.portfolio.TopUpPortfolioBalanceUseCase
 import com.example.stocktracker.application.trading.BuyStockCommand
 import com.example.stocktracker.application.trading.BuyStockUseCase
 import com.example.stocktracker.application.trading.SellStockCommand
 import com.example.stocktracker.application.trading.SellStockUseCase
 import com.example.stocktracker.domain.portfolio.PortfolioId
+import com.example.stocktracker.presentation.http.dto.portfolio.TopUpBalanceRequest
+import com.example.stocktracker.presentation.http.dto.portfolio.toResponse as toBalanceResponse
 import com.example.stocktracker.presentation.http.dto.trading.BuyStockRequest
 import com.example.stocktracker.presentation.http.dto.trading.SellStockRequest
 import com.example.stocktracker.presentation.http.dto.trading.toResponse
@@ -26,8 +30,26 @@ private val logger = KotlinLogging.logger {}
 fun Route.tradingRoutes(
     buyStockUseCase: BuyStockUseCase,
     sellStockUseCase: SellStockUseCase,
+    topUpPortfolioBalanceUseCase: TopUpPortfolioBalanceUseCase,
 ) {
     authenticate("auth-jwt") {
+        route("/portfolio/balance") {
+            post("/top-up") {
+                val principal = call.authentication.principal<JWTPrincipal>() ?: error("Missing JWT principal")
+                val request = call.receive<TopUpBalanceRequest>()
+                val portfolioId = PortfolioId(UUID.fromString(principal.payload.getClaim("portfolioId").asString()))
+
+                val result = topUpPortfolioBalanceUseCase.execute(
+                    TopUpPortfolioBalanceCommand(
+                        portfolioId = portfolioId,
+                        amount = BigDecimal(request.amount),
+                        currency = request.currency,
+                    ),
+                )
+                call.respond(HttpStatusCode.OK, result.toBalanceResponse())
+            }
+        }
+
         route("/portfolio/stocks") {
             post("/buy") {
                 val principal = call.authentication.principal<JWTPrincipal>() ?: error("Missing JWT principal")
