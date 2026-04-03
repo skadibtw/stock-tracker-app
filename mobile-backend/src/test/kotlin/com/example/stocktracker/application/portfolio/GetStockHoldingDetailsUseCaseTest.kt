@@ -37,6 +37,27 @@ class GetStockHoldingDetailsUseCaseTest {
         assertEquals(2, result.lots.size)
     }
 
+    @Test
+    fun `holding details returns empty payload when symbol is not in portfolio`() {
+        val portfolioId = PortfolioId(UUID.randomUUID())
+        val userId = UserId(UUID.randomUUID())
+        val lots = listOf(
+            HoldingLot(StockSymbol("AAPL"), ShareQuantity(BigDecimal("1.5")), Money(BigDecimal("100.00"), "USD"), Instant.parse("2026-03-01T10:00:00Z")),
+        )
+        val useCase = GetStockHoldingDetailsUseCase(
+            FakePortfolioRepository(
+                Portfolio(portfolioId, userId, Money(BigDecimal("0.00"), "USD"), lots),
+            ),
+        )
+
+        val result = kotlinx.coroutines.runBlocking {
+            useCase.execute(portfolioId, StockSymbol("VTBR"))
+        }
+
+        assertEquals("0", result.totalQuantity.value.stripTrailingZeros().toPlainString())
+        assertEquals(0, result.lots.size)
+    }
+
     private class FakePortfolioRepository(private val portfolio: Portfolio) : PortfolioRepository {
         override suspend fun save(portfolio: Portfolio): Portfolio = portfolio
         override suspend fun create(portfolio: Portfolio): Portfolio = portfolio
