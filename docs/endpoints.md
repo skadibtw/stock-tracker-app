@@ -68,6 +68,8 @@ Response `503 Service Unavailable` is returned when the Go quotes service is dow
 ### `GET /portfolio/stocks/{symbol}`
 Returns acquisition history for one stock symbol in the authenticated portfolio.
 
+If the portfolio exists but the symbol is currently absent from holdings, the backend returns an empty `lots` array and zero quantity instead of an error.
+
 Response `200 OK`:
 ```json
 {
@@ -86,7 +88,7 @@ Response `200 OK`:
 ```
 
 ### `POST /portfolio/stocks/buy`
-Appends a buy transaction and creates a new holding lot.
+Appends a buy transaction and creates a new holding lot. Returns `400 Bad Request` when the portfolio cash balance is insufficient.
 
 Request body:
 ```json
@@ -152,6 +154,27 @@ Response `200 OK`:
   "grossBuyVolume": "150.00",
   "grossSellVolume": "100.00",
   "netCashFlow": "-50.00",
+  "cashBalance": "950.00",
+  "currency": "USD"
+}
+```
+
+### `POST /portfolio/balance/top-up`
+Credits cash to the authenticated portfolio.
+
+Request body:
+```json
+{
+  "amount": "1000.00",
+  "currency": "USD"
+}
+```
+
+Response `200 OK`:
+```json
+{
+  "portfolioId": "uuid",
+  "cashBalance": "1000.00",
   "currency": "USD"
 }
 ```

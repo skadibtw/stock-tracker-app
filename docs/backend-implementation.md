@@ -18,11 +18,14 @@ This branch implements the Kotlin mobile API gateway in `mobile-api/`, the Kotli
 - User registration with login and password
 - User login with login and password
 - Backend proxy for latest market quotes via the Go quotes service
+- Authenticated portfolio cash balance top-up
 - Authenticated stock holding lookup by symbol
 - Authenticated buy and sell operations
 - Authenticated portfolio transaction statistics
 - Append-only trade history persistence
 - Holding-lot persistence for acquisition history
+- Cash balance validation before buy operations
+- Empty holding details response for missing symbols in an existing portfolio
 
 ## Module layout
 - `mobile-backend/src/main/kotlin/com/example/stocktracker/bootstrap` - application bootstrap
@@ -52,6 +55,7 @@ Key log events:
 - application bootstrap and configuration loading
 - database initialization and schema setup
 - auth command entry, duplicate-login rejection, login success/failure
+- balance top-up processing and balance updates
 - holdings queries and aggregation checkpoints
 - buy/sell command processing and transaction persistence
 - statistics generation checkpoints
@@ -67,7 +71,9 @@ Log levels:
 - Public quotes are read through `QUOTES_SERVICE_BASE_URL`, which points at the Go service that polls `/dev/quotes` from the Linux driver.
 - JWT carries `portfolioId`, which keeps current protected portfolio routes integration-ready.
 - The backend now exposes `GET /market/quotes/{symbol}` as the first Kotlin-side integration point for the Go plus C quote pipeline.
+- The backend now exposes `POST /portfolio/balance/top-up` and returns `cashBalance` in portfolio statistics.
 - `portfolio-service` publishes `user.registered` and `trade.executed` events into Redis Streams.
+- Portfolio balance changes are also emitted as a dedicated event and recorded through the telemetry layer.
 - OpenTelemetry traces are exported through `OTEL_EXPORTER_OTLP_ENDPOINT`.
 
 ## Verification

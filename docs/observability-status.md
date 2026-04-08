@@ -2,7 +2,7 @@
 
 ## Current State
 
-На 1 апреля 2026 года в проекте уже реализован рабочий baseline для наблюдаемости на базе OpenTelemetry.
+На 8 апреля 2026 года в проекте уже реализован рабочий baseline для наблюдаемости на базе OpenTelemetry.
 
 ## Where OpenTelemetry Is Used
 

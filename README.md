@@ -27,7 +27,7 @@ Multi-module repository for a trading and investing platform.
 - `docs/system-architecture.md` - target multi-service architecture and Docker deployment guide
 - `docs/endpoints.md` - HTTP endpoint reference for the Kotlin backend
 - `docs/Full_task.pdf` - course assignment requirements and grading context
-- `knowledge-base/obsidian/` - Obsidian knowledge base for course preparation
+- `knowledge-base/obsidian/` - Obsidian knowledge base for course preparation, starting from `00-Главная.md`
 - `reports/course-project/` - LaTeX source and PDF report for submission
 - `driver/README.md` - Linux quotes driver build and usage
 - `quotes-service/README.md` - Go quotes service configuration and API

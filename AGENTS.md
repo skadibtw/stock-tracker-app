@@ -69,7 +69,7 @@ This repository is intended to hold the full trading and investing application p
 | `docker-compose.yml` | Multi-service local/server stack |
 | `deploy/otel-collector/config.yaml` | OpenTelemetry Collector pipeline config |
 | `docs/system-architecture.md` | Multi-service architecture and deployment plan |
-| `knowledge-base/obsidian/00-index.md` | Entry point for the Obsidian knowledge base |
+| `knowledge-base/obsidian/00-Главная.md` | Entry point for the Obsidian knowledge base |
 | `reports/course-project/report.tex` | Main LaTeX source for the course report |
 | `docs/endpoints.md` | API contract reference for implemented backend endpoints |
 | `.opencode/skills/trading-backend-kotlin-api/SKILL.md` | Custom project skill for Kotlin trading backend work |
@@ -89,7 +89,7 @@ This repository is intended to hold the full trading and investing application p
 | Testing Strategy | `docs/testing-strategy.md` | Current and planned testing model |
 | Observability Status | `docs/observability-status.md` | OpenTelemetry and observability baseline |
 | Course Requirements | `docs/Full_task.pdf` | Full assignment brief and submission constraints |
-| Knowledge Base | `knowledge-base/obsidian/00-index.md` | Obsidian note index for theory and project context |
+| Knowledge Base | `knowledge-base/obsidian/00-Главная.md` | Obsidian note index for theory and project context |
 | Course Report | `reports/course-project/report.tex` | LaTeX source for the final PDF report |
 | Project Map | `AGENTS.md` | Structural guide for AI agents |
 
