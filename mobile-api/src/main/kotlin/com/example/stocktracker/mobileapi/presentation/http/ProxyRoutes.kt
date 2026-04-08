@@ -25,6 +25,9 @@ fun Route.proxyRoutes(upstreamProxy: UpstreamProxy) {
     }
 
     route("/portfolio") {
+        post("/balance/top-up") {
+            upstreamProxy.forward(call, "/portfolio/balance/top-up")
+        }
         get("/stocks/{symbol}") {
             upstreamProxy.forward(call, call.request.path())
         }

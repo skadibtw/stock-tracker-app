@@ -4,9 +4,9 @@ import com.example.stocktracker.application.statistics.GetPortfolioStatisticsUse
 import com.example.stocktracker.domain.portfolio.PortfolioId
 import com.example.stocktracker.presentation.http.dto.statistics.toResponse
 import io.github.oshai.kotlinlogging.KotlinLogging
+import io.ktor.server.auth.authentication
 import io.ktor.server.auth.authenticate
 import io.ktor.server.auth.jwt.JWTPrincipal
-import io.ktor.server.auth.principal
 import io.ktor.server.response.respond
 import io.ktor.server.routing.Route
 import io.ktor.server.routing.get
@@ -21,7 +21,7 @@ fun Route.statisticsRoutes(
     authenticate("auth-jwt") {
         route("/portfolio") {
             get("/statistics") {
-                val principal = call.principal<JWTPrincipal>() ?: error("Missing JWT principal")
+                val principal = call.authentication.principal<JWTPrincipal>() ?: error("Missing JWT principal")
                 val portfolioId = PortfolioId(UUID.fromString(principal.payload.getClaim("portfolioId").asString()))
 
                 logger.debug {

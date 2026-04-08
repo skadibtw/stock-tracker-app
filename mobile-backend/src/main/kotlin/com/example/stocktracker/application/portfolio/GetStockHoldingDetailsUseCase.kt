@@ -22,12 +22,6 @@ class GetStockHoldingDetailsUseCase(
         val portfolio = portfolioRepository.findById(portfolioId)
             ?: throw NotFoundException("Portfolio was not found")
         val lots = portfolioRepository.findHoldingLots(portfolioId, symbol)
-        if (lots.isEmpty()) {
-            logger.warn {
-                "[GetStockHoldingDetailsUseCase.execute] No holding lots found {portfolioId=${portfolioId.value}, symbol=${symbol.value}}"
-            }
-            throw NotFoundException("Holding lots were not found for symbol ${symbol.value}")
-        }
 
         val totalQuantity = lots.fold(BigDecimal.ZERO) { total, lot ->
             total + lot.quantity.value

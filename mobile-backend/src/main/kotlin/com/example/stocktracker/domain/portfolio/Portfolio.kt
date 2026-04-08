@@ -20,12 +20,14 @@ data class HoldingLot(
 data class Portfolio(
     val id: PortfolioId,
     val userId: UserId,
+    val cashBalance: Money,
     val holdings: List<HoldingLot>,
 ) {
     companion object {
         fun empty(userId: UserId, portfolioId: PortfolioId): Portfolio = Portfolio(
             id = portfolioId,
             userId = userId,
+            cashBalance = Money.zero("USD"),
             holdings = emptyList(),
         )
     }

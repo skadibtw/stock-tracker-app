@@ -6,6 +6,7 @@ import io.github.oshai.kotlinlogging.KotlinLogging
 import io.ktor.server.application.Application
 import io.ktor.server.application.install
 import io.ktor.server.auth.Authentication
+import io.ktor.server.auth.jwt.JWTPrincipal
 import io.ktor.server.auth.jwt.jwt
 
 private val logger = KotlinLogging.logger {}
@@ -25,8 +26,7 @@ fun Application.configureAuthentication(appConfig: AppConfig) {
                     logger.warn { "[Application.configureAuthentication] Rejecting JWT without subject claim" }
                     null
                 } else {
-                    logger.debug { "[Application.configureAuthentication] JWT accepted {subject=$subject}" }
-                    credential
+                    JWTPrincipal(credential.payload)
                 }
             }
         }

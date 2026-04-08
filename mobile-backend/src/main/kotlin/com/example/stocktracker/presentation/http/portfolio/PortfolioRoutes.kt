@@ -5,9 +5,9 @@ import com.example.stocktracker.domain.common.StockSymbol
 import com.example.stocktracker.domain.portfolio.PortfolioId
 import com.example.stocktracker.presentation.http.dto.portfolio.toResponse
 import io.github.oshai.kotlinlogging.KotlinLogging
+import io.ktor.server.auth.authentication
 import io.ktor.server.auth.authenticate
 import io.ktor.server.auth.jwt.JWTPrincipal
-import io.ktor.server.auth.principal
 import io.ktor.server.response.respond
 import io.ktor.server.routing.Route
 import io.ktor.server.routing.get
@@ -22,7 +22,7 @@ fun Route.portfolioRoutes(
     authenticate("auth-jwt") {
         route("/portfolio") {
             get("/stocks/{symbol}") {
-                val principal = call.principal<JWTPrincipal>() ?: error("Missing JWT principal")
+                val principal = call.authentication.principal<JWTPrincipal>() ?: error("Missing JWT principal")
                 val portfolioIdClaim = principal.payload.getClaim("portfolioId").asString()
                 val symbolParam = call.parameters["symbol"] ?: throw IllegalArgumentException("Symbol path parameter is required")
                 val portfolioId = PortfolioId(UUID.fromString(portfolioIdClaim))

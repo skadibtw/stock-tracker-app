@@ -23,7 +23,11 @@ class GetStockHoldingDetailsUseCaseTest {
             HoldingLot(StockSymbol("AAPL"), ShareQuantity(BigDecimal("1.5")), Money(BigDecimal("100.00"), "USD"), Instant.parse("2026-03-01T10:00:00Z")),
             HoldingLot(StockSymbol("AAPL"), ShareQuantity(BigDecimal("2.0")), Money(BigDecimal("120.00"), "USD"), Instant.parse("2026-03-02T10:00:00Z")),
         )
-        val useCase = GetStockHoldingDetailsUseCase(FakePortfolioRepository(Portfolio(portfolioId, userId, lots)))
+        val useCase = GetStockHoldingDetailsUseCase(
+            FakePortfolioRepository(
+                Portfolio(portfolioId, userId, Money(BigDecimal("0.00"), "USD"), lots),
+            ),
+        )
 
         val result = kotlinx.coroutines.runBlocking {
             useCase.execute(portfolioId, StockSymbol("AAPL"))
@@ -31,6 +35,27 @@ class GetStockHoldingDetailsUseCaseTest {
 
         assertEquals("3.5", result.totalQuantity.value.stripTrailingZeros().toPlainString())
         assertEquals(2, result.lots.size)
+    }
+
+    @Test
+    fun `holding details returns empty payload when symbol is not in portfolio`() {
+        val portfolioId = PortfolioId(UUID.randomUUID())
+        val userId = UserId(UUID.randomUUID())
+        val lots = listOf(
+            HoldingLot(StockSymbol("AAPL"), ShareQuantity(BigDecimal("1.5")), Money(BigDecimal("100.00"), "USD"), Instant.parse("2026-03-01T10:00:00Z")),
+        )
+        val useCase = GetStockHoldingDetailsUseCase(
+            FakePortfolioRepository(
+                Portfolio(portfolioId, userId, Money(BigDecimal("0.00"), "USD"), lots),
+            ),
+        )
+
+        val result = kotlinx.coroutines.runBlocking {
+            useCase.execute(portfolioId, StockSymbol("VTBR"))
+        }
+
+        assertEquals("0", result.totalQuantity.value.stripTrailingZeros().toPlainString())
+        assertEquals(0, result.lots.size)
     }
 
     private class FakePortfolioRepository(private val portfolio: Portfolio) : PortfolioRepository {
@@ -41,5 +66,6 @@ class GetStockHoldingDetailsUseCaseTest {
         override suspend fun findHoldingLots(portfolioId: PortfolioId, symbol: StockSymbol): List<HoldingLot> = portfolio.holdings.filter { it.symbol == symbol }
         override suspend fun addHoldingLot(portfolioId: PortfolioId, lot: HoldingLot): HoldingLot = lot
         override suspend fun consumeHoldingLots(portfolioId: PortfolioId, symbol: StockSymbol, quantity: ShareQuantity): List<HoldingLot> = emptyList()
+        override suspend fun updateCashBalance(portfolioId: PortfolioId, balance: Money): Money = balance
     }
 }

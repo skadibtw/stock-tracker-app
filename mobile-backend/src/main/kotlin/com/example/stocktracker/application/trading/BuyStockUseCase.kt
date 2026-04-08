@@ -46,6 +46,11 @@ class BuyStockUseCase(
         val symbol = StockSymbol(command.symbol.uppercase())
         val quantity = ShareQuantity(command.quantity)
         val price = Money(command.pricePerShare, command.currency).normalized()
+        val totalCost = price.multiply(quantity.value)
+
+        require(portfolio.cashBalance.currency == totalCost.currency) { "Balance currency mismatch" }
+        require(portfolio.cashBalance.amount >= totalCost.amount) { "Insufficient funds" }
+        portfolioRepository.updateCashBalance(portfolio.id, portfolio.cashBalance - totalCost)
 
         val holdingLot = HoldingLot(
             symbol = symbol,
@@ -75,6 +80,7 @@ class BuyStockUseCase(
                 "symbol" to tradeRecord.symbol.value,
                 "quantity" to tradeRecord.quantity.value.toPlainString(),
                 "pricePerShare" to tradeRecord.pricePerShare.amount.toPlainString(),
+                "totalAmount" to totalCost.amount.toPlainString(),
                 "currency" to tradeRecord.pricePerShare.currency,
                 "executedAt" to tradeRecord.executedAt.toString(),
             ),

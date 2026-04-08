@@ -30,16 +30,23 @@ class GetPortfolioStatisticsUseCaseTest {
 
         assertEquals(3, result.totalTransactions)
         assertEquals("-50.00", result.netCashFlow)
+        assertEquals("250.00", result.cashBalance)
     }
 
     private class FakePortfolioRepository : PortfolioRepository {
         override suspend fun save(portfolio: Portfolio): Portfolio = portfolio
         override suspend fun create(portfolio: Portfolio): Portfolio = portfolio
-        override suspend fun findById(portfolioId: PortfolioId): Portfolio? = Portfolio(portfolioId, UserId(UUID.randomUUID()), emptyList())
+        override suspend fun findById(portfolioId: PortfolioId): Portfolio? = Portfolio(
+            portfolioId,
+            UserId(UUID.randomUUID()),
+            Money(BigDecimal("250.00"), "USD"),
+            emptyList(),
+        )
         override suspend fun findByUserId(userId: UserId): Portfolio? = null
         override suspend fun findHoldingLots(portfolioId: PortfolioId, symbol: StockSymbol): List<HoldingLot> = emptyList()
         override suspend fun addHoldingLot(portfolioId: PortfolioId, lot: HoldingLot): HoldingLot = lot
         override suspend fun consumeHoldingLots(portfolioId: PortfolioId, symbol: StockSymbol, quantity: ShareQuantity): List<HoldingLot> = emptyList()
+        override suspend fun updateCashBalance(portfolioId: PortfolioId, balance: Money): Money = balance
     }
 
     private class FakeTradeHistoryRepository : TradeHistoryRepository {
