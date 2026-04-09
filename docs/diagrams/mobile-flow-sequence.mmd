@@ -1,0 +1,56 @@
+sequenceDiagram
+    autonumber
+    actor app as Мобильное приложение
+    participant gateway as API-шлюз\nmobile-api
+    participant backend as Сервис портфеля\nmobile-backend
+    participant db as PostgreSQL
+    participant quotes as Сервис котировок\nquotes-service
+    participant redis as Redis
+
+    rect rgb(245, 247, 250)
+        Note over app,backend: Вход пользователя через POST /auth/login
+        app->>gateway: POST /auth/login\nлогин, пароль
+        gateway->>backend: Проксирование запроса
+        backend->>db: Проверка пользователя и загрузка портфеля
+        db-->>backend: Данные пользователя
+        backend-->>gateway: 200 OK + токен доступа
+        gateway-->>app: 200 OK + токен доступа
+    end
+
+    rect rgb(245, 247, 250)
+        Note over app,quotes: Запрос котировки через GET /market/quotes/{symbol}
+        app->>gateway: GET /market/quotes/{symbol}
+        gateway->>backend: Проксирование запроса
+        backend->>quotes: Получение актуальной котировки
+        quotes-->>backend: Цена, валюта,\nвремя получения, источник
+        backend-->>gateway: 200 OK + котировка
+        gateway-->>app: 200 OK + котировка
+    end
+
+    rect rgb(245, 247, 250)
+        Note over app,redis: Покупка акции через POST /portfolio/stocks/buy
+        app->>gateway: POST /portfolio/stocks/buy\nтокен доступа + параметры сделки
+        gateway->>backend: Проксирование запроса
+        Note right of backend: Проверка токена доступа для защищённого метода
+        backend->>quotes: Запрос актуальной цены акции
+        quotes-->>backend: Актуальная цена
+        backend->>db: Чтение портфеля и денежного баланса
+        db-->>backend: Текущее состояние портфеля
+        backend->>db: Списание средств,\nдобавление lot,\nзапись trade history
+        db-->>backend: Транзакция сохранена
+        backend->>redis: Публикация trade.executed
+        redis-->>backend: ACK
+        backend-->>gateway: 201 Created + данные сделки
+        gateway-->>app: 201 Created + данные сделки
+    end
+
+    rect rgb(245, 247, 250)
+        Note over app,db: Получение статистики через GET /portfolio/statistics
+        app->>gateway: GET /portfolio/statistics\nтокен доступа
+        gateway->>backend: Проксирование запроса
+        Note right of backend: Проверка токена доступа для защищённого метода
+        backend->>db: Загрузка агрегированной статистики
+        db-->>backend: Агрегированная статистика\nи денежный баланс
+        backend-->>gateway: 200 OK + статистика
+        gateway-->>app: 200 OK + статистика
+    end

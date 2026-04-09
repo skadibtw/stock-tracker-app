@@ -1,0 +1,39 @@
+flowchart LR
+    user["Пользователь"]
+    android["Android-клиент"]
+
+    subgraph client["Клиентский контур"]
+        user
+        android
+    end
+
+    subgraph backend["Backend-контур"]
+        gateway["mobile-api<br/>Внешний API Gateway"]
+        portfolio["mobile-backend / portfolio-service<br/>Основной бизнес-сервис"]
+        quotes["quotes-service<br/>Go-сервис котировок"]
+        driver["Linux C driver<br/>Источник рыночных данных"]
+    end
+
+    subgraph data["Данные и события"]
+        postgres["PostgreSQL<br/>Транзакционное хранилище"]
+        redis["Redis / KeyDB<br/>Кэш и брокер сообщений"]
+        clickhouse["ClickHouse<br/>История котировок"]
+    end
+
+    subgraph observability["Контур наблюдаемости"]
+        otel["OpenTelemetry<br/>Логи и телеметрия"]
+    end
+
+    user --> android
+    android -->|"HTTP REST + токен доступа"| gateway
+    gateway -->|"Проксирование HTTP-запросов"| portfolio
+    portfolio -->|"Транзакционные данные пользователей, портфелей и сделок"| postgres
+    portfolio -->|"Публикация событий пользователей и сделок"| redis
+    portfolio -->|"Запрос актуальных котировок"| quotes
+    quotes -->|"Актуальные котировки и события"| redis
+    quotes -->|"История котировок"| clickhouse
+    driver -->|"Источник рыночных данных"| quotes
+
+    gateway -.->|"Логи и телеметрия"| otel
+    portfolio -.->|"Логи и телеметрия"| otel
+    quotes -.->|"Логи и телеметрия"| otel

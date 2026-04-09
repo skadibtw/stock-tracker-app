@@ -30,23 +30,19 @@
 \urlstyle{same}
 
 \newcommand{\projectscreenshot}[2]{%
-    \begin{figure}[htbp]
-        \centering
-        \IfFileExists{../../docs/images/#1.png}{%
-            \includegraphics[width=0.8\textwidth]{../../docs/images/#1.png}%
+    \IfFileExists{../../docs/images/#1.png}{%
+        \includegraphics[width=\linewidth,height=0.33\textheight,keepaspectratio]{../../docs/images/#1.png}%
+    }{%
+        \IfFileExists{../../docs/images/#1.jpg}{%
+            \includegraphics[width=\linewidth,height=0.33\textheight,keepaspectratio]{../../docs/images/#1.jpg}%
         }{%
-            \IfFileExists{../../docs/images/#1.jpg}{%
-                \includegraphics[width=0.8\textwidth]{../../docs/images/#1.jpg}%
+            \IfFileExists{../../docs/images/#1.jpeg}{%
+                \includegraphics[width=\linewidth,height=0.33\textheight,keepaspectratio]{../../docs/images/#1.jpeg}%
             }{%
-                \IfFileExists{../../docs/images/#1.jpeg}{%
-                    \includegraphics[width=0.8\textwidth]{../../docs/images/#1.jpeg}%
-                }{%
-                    \fbox{\parbox{0.8\textwidth}{\centering Скриншот не найден по пути \texttt{docs/images/#1.(png|jpg|jpeg)}}}%
-                }%
+                \fbox{\parbox{0.9\linewidth}{\centering Скриншот не найден по пути \texttt{docs/images/#1.(png|jpg|jpeg)}}}%
             }%
         }%
-        \caption{#2}
-    \end{figure}
+    }%
 }
 
 \begin{document}
@@ -57,7 +53,7 @@
         Факультет программной инженерии и компьютерной техники\\[2cm]
 
         \textbf{\Large Отчёт по групповому проекту}\\[0.3cm]
-        \textbf{\large по курсу <<Разработка мобильных приложений>>}\\[1.4cm]
+        \textbf{\large по курсу "Разработка мобильных приложений"}\\[1.4cm]
 
         \textbf{\Large Система отслеживания акций и портфеля}\\[0.4cm]
         Android-клиент, backend, сервис котировок и observability-контур\\[2cm]
@@ -71,7 +67,6 @@
             & Садовой Григорий Владимирович \\
             & Состанов Тимур Айратович \\
             & Трофимов Владислав Дмитриевич \\
-            Группа: & \underline{\hspace{6.5cm}} \\
             Преподаватель: & Ключев А.\,О. \\
         \end{tabular}
     \end{flushright}
@@ -90,7 +85,7 @@
 \section*{Введение}
 \addcontentsline{toc}{section}{Введение}
 
-Групповой проект по курсу <<Разработка мобильных приложений>> направлен на создание многокомпонентной системы для просмотра рыночных котировок, ведения пользовательского портфеля и выполнения операций покупки и продажи акций. На момент подготовки этого отчёта проект уже вышел за пределы монолитного учебного backend и включает Android-клиент, мобильный API-шлюз, транзакционный backend, отдельный сервис котировок на Go, а также контейнеризированный стек observability.
+Групповой проект по курсу "Разработка мобильных приложений" направлен на создание многокомпонентной системы для просмотра рыночных котировок, ведения пользовательского портфеля и выполнения операций покупки и продажи акций. На момент подготовки этого отчёта проект уже вышел за пределы монолитного учебного backend и включает Android-клиент, мобильный API-шлюз, транзакционный backend, отдельный сервис котировок на Go, а также контейнеризированный стек observability.
 
 Отчёт подготовлен по актуальному состоянию репозитория после обновления ветки \texttt{main} на 8 апреля 2026 года и повторного импорта Android-клиента из внешнего репозитория команды. Старые feature-ветки общего репозитория рассмотрены как этапы развития backend-части, а архитектурный baseline определяется именно актуальным \texttt{main}. В свежей версии backend дополнительно появились проверки денежного баланса, сценарий пополнения портфеля и уточнённая обработка отсутствующих символов в holdings. Структура отчёта соответствует требованиям лекционных материалов курса: техническое задание, описание архитектуры, описание реализации и описание системы тестирования~[1].
 
@@ -179,6 +174,14 @@
     \item инфраструктурный слой хранит данные и собирает телеметрию.
 \end{itemize}
 
+\begin{figure}[htbp]
+    \centering
+    \includegraphics[width=\textwidth]{../../docs/diagrams/system-architecture.pdf}
+    \caption{Архитектура клиент-серверной системы проекта}
+\end{figure}
+
+На рисунке показана целевая backend-схема проекта, зафиксированная в документации и текущей структуре репозитория. Пользовательский сценарий начинается в Android-клиенте, проходит через внешний gateway \texttt{mobile-api} и попадает во внутренний транзакционный сервис \texttt{mobile-backend}. Отдельно выделен контур рыночных данных: \texttt{quotes-service} получает котировки от Linux C-драйвера, публикует актуальные значения в Redis и сохраняет историю в ClickHouse. Также схема отражает observability-подсистему, где backend-сервисы экспортируют telemetry-данные в OpenTelemetry Collector и далее в стек мониторинга.
+
 \subsection{Декомпозиция на компоненты}
 
 \begin{longtable}{p{0.23\textwidth} p{0.7\textwidth}}
@@ -212,6 +215,14 @@
 Такое разделение делает use case слабее связанными с Ktor, JDBC и конкретными внешними библиотеками. В результате тестирование логики регистрации, торговли и статистики возможно без полного запуска серверного окружения.
 
 \subsection{Основные потоки взаимодействия}
+
+\begin{figure}[htbp]
+    \centering
+    \includegraphics[width=0.96\textwidth]{../../docs/diagrams/mobile-flow-sequence.pdf}
+    \caption{Последовательность взаимодействия мобильного клиента, gateway и backend}
+\end{figure}
+
+Эта схема показывает типовой пользовательский сценарий на уровне HTTP-взаимодействий между компонентами. Для входа пользователя \texttt{mobile-api} выступает только как внешний шлюз, а проверка учётных данных и выдача JWT выполняется во внутреннем сервисе \texttt{mobile-backend}. Для защищённых операций backend проверяет JWT, обращается к PostgreSQL за состоянием портфеля и, при необходимости, запрашивает актуальную цену у \texttt{quotes-service}. После выполнения покупки backend публикует событие \texttt{trade.executed} в Redis, а затем возвращает ответ обратно через gateway в мобильное приложение.
 
 \subsubsection{Сценарий аутентификации и торговых операций}
 
@@ -288,6 +299,48 @@ Android-клиент, наоборот, не находился в общем Gi
 \end{itemize}
 
 Текущая реализация клиента носит прототипный характер. Вход реализован локальной проверкой непустых полей, котировки берутся напрямую из MOEX ISS через \texttt{HttpURLConnection}, а в части экранов используются локально сгенерированные значения. Тем не менее экранная структура уже хорошо подготовлена для подключения реального backend API.
+
+\subsection{Экраны мобильного интерфейса}
+
+Для отчёта были подготовлены четыре ключевых скриншота Android-клиента. Они показывают текущий уровень проработки интерфейса и помогают соотнести описание реализации с реальными пользовательскими экранами.
+
+\begin{figure}[htbp]
+    \centering
+    \begin{minipage}[t]{0.46\textwidth}
+        \centering
+        \projectscreenshot{profile}{Экран профиля пользователя}
+
+        \small Экран профиля пользователя
+    \end{minipage}
+    \hfill
+    \begin{minipage}[t]{0.46\textwidth}
+        \centering
+        \projectscreenshot{sber-stocks}{Экран карточки акции Сбербанка}
+
+        \small Экран карточки акции Сбербанка
+    \end{minipage}
+    \caption{Экраны профиля пользователя и карточки акции}
+\end{figure}
+
+\clearpage
+
+\begin{figure}[htbp]
+    \centering
+    \begin{minipage}[t]{0.46\textwidth}
+        \centering
+        \projectscreenshot{stocks-list}{Экран списка акций}
+
+        \small Экран списка акций
+    \end{minipage}
+    \hfill
+    \begin{minipage}[t]{0.46\textwidth}
+        \centering
+        \projectscreenshot{portfilio_statistics}{Экран статистики портфеля}
+
+        \small Экран статистики портфеля
+    \end{minipage}
+    \caption{Экраны списка акций и статистики портфеля}
+\end{figure}
 
 \subsection{API gateway}
 
@@ -484,17 +537,5 @@ ClickHouse. HTTP Interface Documentation [Электронный ресурс]. 
 Документация проекта \texttt{stock-tracker-app}: \texttt{README.md}, \texttt{docs/system-architecture.md}, \texttt{docs/backend-implementation.md}, \texttt{docs/endpoints.md}. Репозиторий команды, состояние на 08.04.2026.
 
 \end{thebibliography}
-
-\appendix
-
-\section*{Приложение А. Скриншоты мобильного интерфейса}
-\addcontentsline{toc}{section}{Приложение А. Скриншоты мобильного интерфейса}
-
-Ниже размещены ключевые экраны Android-клиента. Отчёт настроен на автоматический поиск изображений в каталоге \texttt{docs/images} по ожидаемым именам файлов.
-
-\projectscreenshot{профиль}{Экран профиля пользователя}
-\projectscreenshot{акции сбербанка}{Экран карточки акции Сбербанка}
-\projectscreenshot{список акций}{Экран списка акций}
-\projectscreenshot{статистика портфеля}{Экран статистики портфеля}
 
 \end{document}
